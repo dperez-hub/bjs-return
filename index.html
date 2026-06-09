@@ -1,0 +1,1867 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>BJ's Order Management System - Call Center</title>
+<style>
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background:#fff; font-size:14px; color:#1a1a1a; }
+
+.header { background:#111; display:flex; align-items:center; justify-content:space-between; padding:0 20px; height:56px; }
+.header-left { display:flex; align-items:center; gap:16px; }
+.hamburger { color:#fff; font-size:20px; cursor:pointer; }
+.bjs-logo img { height:36px; width:auto; display:block; }
+.app-name { color:#fff; font-size:16px; font-weight:500; }
+.header-right { display:flex; align-items:center; gap:6px; }
+.user-name { color:#fff; font-weight:600; font-size:14px; }
+.user-role { color:#aaa; font-size:12px; display:block; text-align:right; }
+.header-logout { color:#aaa; font-size:20px; margin-left:10px; cursor:pointer; }
+
+.layout { display:flex; height:calc(100vh - 90px); }
+
+/* SIDE NAV */
+.sidenav { width:160px; background:#fff; border-right:1px solid #ebebeb; display:flex; flex-direction:column; align-items:center; padding:32px 0 24px; flex-shrink:0; }
+.nav-steps { display:flex; flex-direction:column; align-items:center; width:100%; }
+.nav-step { display:flex; flex-direction:column; align-items:center; position:relative; width:100%; }
+.nav-connector { width:2px; height:36px; background:#e0e0e0; margin:0 auto; }
+.nav-connector.done { background:#e0e0e0; }
+.nav-icon-wrap { position:relative; display:flex; align-items:center; justify-content:center; }
+.nav-circle { width:52px; height:52px; border-radius:50%; background:#f0f0f0; border:2px solid #e0e0e0; display:flex; align-items:center; justify-content:center; }
+.nav-circle svg { stroke:#999; }
+.nav-circle.active { background:#e31837; border-color:#e31837; }
+.nav-circle.active svg { stroke:#fff !important; }
+.nav-circle.done { background:#fff; border-color:#e0e0e0; }
+.nav-circle.done svg { stroke:#aaa !important; }
+.nav-check { position:absolute; bottom:-2px; right:-2px; width:18px; height:18px; border-radius:50%; background:#22c55e; border:2px solid #fff; display:flex; align-items:center; justify-content:center; }
+.nav-check svg { stroke:#fff; width:10px; height:10px; }
+.nav-step-label { font-size:11px; font-weight:600; text-align:center; line-height:1.4; margin-top:8px; padding:0 12px; }
+.nav-step-label.active { color:#e31837; font-weight:700; }
+.nav-step-label.done { color:#aaa; }
+.nav-step-label.inactive { color:#aaa; }
+
+/* CONTENT */
+.content { flex:1; padding:32px 48px; overflow-y:auto; }
+.page-title-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+.page-title { font-size:24px; font-weight:800; color:#111; }
+.page-subtitle { font-size:13px; color:#888; margin-bottom:24px; }
+.action-btns { display:flex; align-items:center; gap:10px; }
+.btn-cancel { font-size:14px; color:#e31837; font-weight:700; background:none; border:1.5px solid #e31837; border-radius:6px; cursor:pointer; padding:10px 24px; height:42px; }
+.btn-save { padding:10px 24px; border:1.5px solid #ccc; border-radius:6px; background:#fff; font-size:14px; font-weight:700; cursor:pointer; color:#333; height:42px; }
+.btn-next { padding:10px 24px; border:none; border-radius:6px; background:#e31837; font-size:14px; font-weight:700; cursor:pointer; color:#fff; height:42px; }
+
+/* OPTION CARDS */
+.option-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
+.option-card { border:1.5px solid #e0e0e0; border-radius:10px; padding:18px 20px; display:flex; align-items:center; gap:14px; cursor:pointer; position:relative; background:#fff; transition:border-color 0.15s; }
+.option-card:hover { border-color:#e31837; }
+.option-card.selected { border-color:#e31837; }
+.card-icon-wrap { width:42px; height:42px; border-radius:50%; background:#f5f5f5; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.option-card.selected .card-icon-wrap { background:#ffeaea; }
+.card-icon-wrap svg { stroke:#888; }
+.option-card.selected .card-icon-wrap svg { stroke:#e31837; }
+.card-label { font-size:14px; font-weight:600; color:#1a1a1a; }
+.radio { position:absolute; top:14px; right:14px; width:18px; height:18px; border-radius:50%; border:2px solid #ccc; display:flex; align-items:center; justify-content:center; }
+.option-card.selected .radio { border-color:#e31837; }
+.radio-dot { width:10px; height:10px; border-radius:50%; background:#e31837; display:none; }
+.option-card.selected .radio-dot { display:block; }
+
+/* SEARCH PANEL */
+.search-panel { border:1px solid #e8e8e8; border-radius:10px; overflow:hidden; }
+.search-panel-header { padding:18px 24px 0; display:flex; justify-content:space-between; align-items:center; }
+.search-panel-title { font-size:16px; font-weight:700; color:#111; }
+.search-tips { display:flex; align-items:center; gap:5px; color:#2563eb; font-size:13px; cursor:pointer; }
+.tabs { display:flex; padding:14px 24px 0; border-bottom:1px solid #e8e8e8; }
+.tab { padding:8px 16px 12px; font-size:14px; cursor:pointer; color:#888; font-weight:500; border-bottom:2px solid transparent; margin-bottom:-1px; }
+.tab.active { color:#e31837; border-bottom-color:#e31837; font-weight:700; }
+.search-form { padding:20px 24px; }
+.search-fields { display:grid; grid-template-columns:1fr 1fr auto; gap:16px; align-items:end; }
+.search-fields-single { display:grid; grid-template-columns:1fr auto; gap:16px; align-items:end; max-width:600px; }
+.field-wrap label { display:block; font-size:13px; font-weight:600; color:#444; margin-bottom:6px; }
+.req { color:#e31837; margin-left:2px; }
+.opt { color:#aaa; font-weight:400; margin-left:4px; font-size:12px; }
+.field-input { display:flex; align-items:center; border:1.5px solid #d0d0d0; border-radius:6px; overflow:hidden; }
+.field-input:focus-within { border-color:#e31837; }
+.field-input input { flex:1; padding:9px 12px; border:none; font-size:14px; outline:none; color:#333; background:transparent; }
+.field-icon { padding:0 10px; color:#bbb; font-size:16px; cursor:pointer; flex-shrink:0; }
+.btn-search { padding:0 20px; background:#e31837; color:#fff; border:none; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; height:38px; }
+
+/* RESULTS */
+.results-wrap { border-top:1px solid #f0f0f0; margin:0 24px; }
+.results-body { padding:20px 0 24px; }
+.results-title { font-size:16px; font-weight:700; color:#111; margin-bottom:16px; }
+.results-title span { color:#888; font-weight:400; }
+table { width:100%; border-collapse:collapse; }
+thead tr { border-bottom:2px solid #e8e8e8; }
+th { text-align:left; font-size:13px; font-weight:700; color:#111; padding:0 12px 12px 0; }
+th:last-child { text-align:right; padding-right:0; }
+tbody tr { border-bottom:1px solid #f0f0f0; }
+tbody tr:last-child { border-bottom:none; }
+td { padding:14px 12px 14px 0; vertical-align:middle; font-size:13px; color:#444; }
+td:last-child { text-align:right; padding-right:0; }
+.order-num { color:#e31837; font-weight:700; cursor:pointer; }
+.cust-name { font-size:13px; font-weight:700; color:#111; }
+.cust-email { font-size:12px; color:#888; margin-top:2px; }
+.badge { font-size:12px; font-weight:600; padding:4px 12px; border-radius:20px; display:inline-block; }
+.badge-green { background:#dcfce7; color:#15803d; }
+.badge-blue { background:#dbeafe; color:#1d4ed8; }
+.badge-yellow { background:#fef9c3; color:#854d0e; }
+.btn-select { padding:0 20px; border:1.5px solid #e31837; border-radius:5px; background:#fff; color:#e31837; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; height:38px; }
+
+
+/* ===== PAGE 2: CREATE ORDER ===== */
+.customer-banner { background:#f8f9ff; border:1.5px solid #dbeafe; border-radius:8px; padding:12px 18px; display:flex; align-items:center; gap:14px; margin-bottom:20px; }
+.cust-avatar { width:38px; height:38px; border-radius:50%; background:#e31837; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; flex-shrink:0; }
+.cust-info { flex:1; }
+.cust-name { font-weight:700; font-size:14px; display:flex; align-items:center; gap:8px; }
+.cust-meta { font-size:12px; color:#666; margin-top:3px; display:flex; gap:16px; flex-wrap:wrap; }
+.badge-green-sm { background:#dcfce7; color:#15803d; font-size:11px; font-weight:600; padding:2px 10px; border-radius:20px; }
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; }
+.section-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:#999; margin-bottom:10px; }
+.search-wrap { position:relative; margin-bottom:8px; }
+.search-input { width:100%; padding:10px 12px 10px 36px; border:1.5px solid #d0d0d0; border-radius:6px; font-size:14px; outline:none; }
+.search-input:focus { border-color:#e31837; }
+.search-ico { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:#bbb; font-size:15px; pointer-events:none; }
+.search-hint { font-size:11px; color:#aaa; margin-bottom:8px; }
+.product-list { border:1px solid #e8e8e8; border-radius:8px; overflow:hidden; }
+.product-item { display:flex; align-items:center; padding:10px 14px; gap:12px; cursor:pointer; border-bottom:1px solid #f2f2f2; }
+.product-item:last-child { border-bottom:none; }
+.product-item:hover { background:#fafafa; }
+.p-thumb { width:36px; height:36px; background:#f5f5f5; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.p-info { flex:1; min-width:0; }
+.p-name { font-size:13px; font-weight:600; }
+.p-sku { font-size:11px; color:#aaa; margin-top:1px; }
+.p-stock-ok { color:#15803d; }
+.p-stock-low { color:#d97706; }
+.p-price { font-size:13px; font-weight:700; color:#e31837; white-space:nowrap; margin-right:8px; }
+.add-btn { background:#e31837; color:#fff; border:none; border-radius:5px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; }
+.no-results { padding:24px; text-align:center; color:#bbb; font-size:13px; }
+.order-table { border:1px solid #e8e8e8; border-radius:8px; overflow:hidden; }
+.ot-head { display:grid; grid-template-columns:1fr 90px 70px 30px; background:#f7f7f7; padding:9px 14px; font-size:12px; font-weight:700; color:#666; border-bottom:1px solid #e8e8e8; }
+.ot-row { display:grid; grid-template-columns:1fr 90px 70px 30px; padding:11px 14px; border-bottom:1px solid #f2f2f2; align-items:center; }
+.ot-empty { padding:28px; text-align:center; font-size:13px; color:#ccc; }
+.qty-ctrl { display:flex; align-items:center; gap:6px; }
+.qty-btn { width:24px; height:24px; border:1.5px solid #ddd; border-radius:4px; background:#fff; cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center; color:#555; }
+.qty-val { font-size:13px; font-weight:700; min-width:18px; text-align:center; }
+.del-btn { background:none; border:none; color:#ddd; cursor:pointer; font-size:16px; padding:0; }
+.del-btn:hover { color:#e31837; }
+.ot-footer { padding:10px 14px; background:#fafafa; border-top:1px solid #f0f0f0; display:flex; justify-content:flex-end; }
+.ot-total { font-size:14px; font-weight:800; color:#111; }
+.ot-total span { color:#e31837; margin-left:8px; }
+.items-main { display:flex; gap:24px; }
+.items-left { flex:1; min-width:0; display:flex; flex-direction:column; gap:20px; }
+.sidebar { width:320px; background:#fafafa; border:1px solid #e8e8e8; border-radius:10px; padding:20px 16px; flex-shrink:0; }
+.sb-title { font-size:13px; font-weight:800; margin-bottom:14px; }
+.sb-row { display:flex; justify-content:space-between; font-size:12px; margin-bottom:7px; color:#555; }
+.sb-row.total { font-weight:800; color:#111; border-top:1px solid #ddd; padding-top:9px; margin-top:5px; font-size:14px; }
+.sb-row.total .amt { color:#e31837; }
+.promo-wrap { display:flex; gap:6px; margin-top:12px; }
+.promo-wrap input { flex:1; padding:7px 9px; border:1px solid #d0d0d0; border-radius:4px; font-size:12px; outline:none; }
+.promo-btn { padding:7px 12px; border:1.5px solid #ccc; border-radius:4px; background:#fff; font-size:12px; font-weight:600; cursor:pointer; color:#333; }
+.sb-divider { height:1px; background:#eee; margin:14px 0; }
+.sb-section { font-size:11px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; }
+.notes-ta { width:100%; border:1px solid #d0d0d0; border-radius:5px; padding:7px 9px; font-size:12px; resize:none; color:#555; outline:none; }
+.qa-item { display:flex; align-items:center; gap:7px; padding:7px 0; border-bottom:1px solid #f0f0f0; font-size:12px; color:#2563eb; cursor:pointer; }
+.qa-item:last-child { border-bottom:none; }
+.qa-item:hover { color:#e31837; }
+.bottom-bar { background:#fff; border-top:1px solid #e8e8e8; padding:12px 48px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
+.bottom-step { font-size:12px; color:#aaa; }
+.btn-back { padding:10px 24px; border:1.5px solid #ccc; border-radius:6px; background:#fff; font-size:14px; font-weight:700; cursor:pointer; color:#333; height:42px; }
+.page { display:none; }
+.page.active { display:block; }
+.shell { display:flex; flex-direction:column; height:100vh; }
+.layout { display:flex; flex:1; overflow:hidden; }
+.content { flex:1; padding:32px 48px; overflow-y:auto; }
+
+
+/* ===== PAGE 3: FULFILLMENT ===== */
+.fulfill-section { margin-bottom: 24px; }
+.fulfill-section-title { font-size:16px; font-weight:700; color:#111; margin-bottom:14px; }
+.fulfill-opts { display:flex; gap:12px; margin-bottom:20px; }
+.f-opt { flex:1; border:1.5px solid #e0e0e0; border-radius:10px; padding:16px 12px; text-align:center; cursor:pointer; transition:border-color 0.15s; background:#fff; }
+.f-opt:hover { border-color:#e31837; }
+.f-opt.selected { border-color:#e31837; background:#fff5f5; }
+.f-opt .f-icon { font-size:26px; display:block; margin-bottom:8px; }
+.f-opt .f-label { font-size:13px; font-weight:700; color:#333; }
+.f-opt .f-desc { font-size:11px; color:#888; margin-top:3px; }
+.f-opt.selected .f-label { color:#e31837; }
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.form-field label { display:block; font-size:13px; font-weight:600; color:#444; margin-bottom:5px; }
+.form-field label .req { color:#e31837; margin-left:2px; }
+.form-field input, .form-field select { width:100%; padding:9px 12px; border:1.5px solid #d0d0d0; border-radius:6px; font-size:13px; outline:none; color:#333; }
+.form-field input:focus, .form-field select:focus { border-color:#e31837; }
+.slot-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:8px; }
+.slot-btn { padding:8px 4px; border:1.5px solid #e0e0e0; border-radius:6px; text-align:center; font-size:12px; font-weight:600; color:#555; cursor:pointer; background:#fff; }
+.slot-btn:hover { border-color:#e31837; color:#e31837; }
+.slot-btn.selected { border-color:#e31837; background:#e31837; color:#fff; }
+.slot-btn.unavailable { background:#f5f5f5; color:#ccc; cursor:not-allowed; border-color:#eee; }
+.order-review { border:1px solid #e8e8e8; border-radius:8px; overflow:hidden; }
+.order-review-header { background:#f7f7f7; padding:10px 16px; font-size:12px; font-weight:700; color:#666; display:grid; grid-template-columns:2fr 60px 80px 120px; border-bottom:1px solid #e8e8e8; }
+.order-review-row { display:grid; grid-template-columns:2fr 60px 80px 120px; padding:10px 16px; border-bottom:1px solid #f2f2f2; align-items:center; font-size:13px; }
+.order-review-row:last-child { border-bottom:none; }
+
+/* ===== PAGE 4: REVIEW & PAYMENT ===== */
+.review-section { margin-bottom:24px; }
+.review-section-title { font-size:16px; font-weight:700; color:#111; margin-bottom:14px; }
+.review-card { border:1px solid #e8e8e8; border-radius:10px; overflow:hidden; margin-bottom:16px; }
+.review-card-header { background:#f7f7f7; padding:12px 18px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e8e8e8; }
+.review-card-title { font-size:13px; font-weight:700; color:#333; }
+.review-card-edit { font-size:12px; color:#2563eb; cursor:pointer; font-weight:600; }
+.review-card-edit:hover { color:#e31837; }
+.review-card-body { padding:16px 18px; }
+.review-row { display:flex; justify-content:space-between; font-size:13px; color:#555; margin-bottom:8px; }
+.review-row:last-child { margin-bottom:0; }
+.review-row .label { color:#888; }
+.review-row .value { font-weight:600; color:#111; }
+
+.payment-methods { display:flex; flex-direction:column; gap:10px; }
+.payment-method { border:1.5px solid #e0e0e0; border-radius:8px; padding:14px 16px; display:flex; align-items:center; gap:14px; cursor:pointer; background:#fff; transition:border-color 0.15s; }
+.payment-method:hover { border-color:#e31837; }
+.payment-method.selected { border-color:#e31837; background:#fff5f5; }
+.payment-method .pm-icon { font-size:24px; flex-shrink:0; }
+.payment-method .pm-info { flex:1; }
+.payment-method .pm-name { font-size:13px; font-weight:700; color:#111; }
+.payment-method .pm-detail { font-size:12px; color:#888; margin-top:2px; }
+.payment-method .pm-radio { width:18px; height:18px; border-radius:50%; border:2px solid #ccc; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.payment-method.selected .pm-radio { border-color:#e31837; }
+.pm-dot { width:10px; height:10px; border-radius:50%; background:#e31837; display:none; }
+.payment-method.selected .pm-dot { display:block; }
+
+.pricing-table { width:100%; }
+.pricing-row { display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-bottom:1px solid #f5f5f5; color:#555; }
+.pricing-row:last-child { border-bottom:none; }
+.pricing-row.discount { color:#15803d; }
+.pricing-row.total-row { font-size:16px; font-weight:800; color:#111; border-top:2px solid #e8e8e8; padding-top:12px; margin-top:4px; }
+.pricing-row.total-row .amt { color:#e31837; }
+
+.confirm-btn { width:100%; padding:14px; background:#e31837; color:#fff; border:none; border-radius:8px; font-size:15px; font-weight:700; cursor:pointer; margin-top:16px; }
+.confirm-btn:hover { background:#c0152e; }
+
+/* ===== RETURNS FLOW ===== */
+.return-mode .sidenav { display:none; }
+.return-sidenav { width:160px; background:#fff; border-right:1px solid #ebebeb; display:flex; flex-direction:column; align-items:center; padding:32px 0 24px; flex-shrink:0; }
+.order-summary-card { border:1px solid #e8e8e8; border-radius:10px; overflow:hidden; margin-bottom:20px; }
+.order-summary-card-header { background:#f7f7f7; padding:12px 18px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e8e8e8; }
+.order-summary-card-title { font-size:13px; font-weight:700; color:#333; }
+.order-summary-card-body { padding:16px 18px; }
+.order-info-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px; }
+.order-info-item label { font-size:11px; color:#999; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:4px; }
+.order-info-item span { font-size:14px; font-weight:600; color:#111; }
+.return-items-table { border:1px solid #e8e8e8; border-radius:8px; overflow:hidden; }
+.return-items-head { display:grid; grid-template-columns:2fr 80px 80px 140px; background:#f7f7f7; padding:9px 14px; font-size:12px; font-weight:700; color:#666; border-bottom:1px solid #e8e8e8; }
+.return-items-row { display:grid; grid-template-columns:2fr 80px 80px 140px; padding:12px 14px; border-bottom:1px solid #f2f2f2; align-items:center; }
+.return-items-row:last-child { border-bottom:none; }
+.return-qty-ctrl { display:flex; align-items:center; gap:6px; }
+.return-qty-btn { width:24px; height:24px; border:1.5px solid #ddd; border-radius:4px; background:#fff; cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center; color:#555; }
+.reason-select { font-size:12px; border:1px solid #ddd; border-radius:4px; padding:5px 8px; color:#555; outline:none; width:100%; }
+.reason-select:focus { border-color:#e31837; }
+.return-associate-section { border:1px solid #e8e8e8; border-radius:10px; padding:20px 18px; margin-bottom:20px; }
+.return-associate-title { font-size:15px; font-weight:700; color:#111; margin-bottom:16px; }
+.associate-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.refund-methods { display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
+.refund-method { border:1.5px solid #e0e0e0; border-radius:8px; padding:14px 16px; display:flex; align-items:center; gap:14px; cursor:pointer; background:#fff; transition:border-color 0.15s; }
+.refund-method:hover { border-color:#e31837; }
+.refund-method.selected { border-color:#e31837; background:#fff5f5; }
+.refund-method .rm-icon { font-size:24px; flex-shrink:0; }
+.refund-method .rm-info { flex:1; }
+.refund-method .rm-name { font-size:13px; font-weight:700; color:#111; }
+.refund-method .rm-detail { font-size:12px; color:#888; margin-top:2px; }
+.refund-method .rm-radio { width:18px; height:18px; border-radius:50%; border:2px solid #ccc; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.refund-method.selected .rm-radio { border-color:#e31837; }
+.rm-dot { width:10px; height:10px; border-radius:50%; background:#e31837; display:none; }
+.refund-method.selected .rm-dot { display:block; }
+.refund-amount-section { border:1px solid #e8e8e8; border-radius:10px; padding:20px 18px; margin-bottom:20px; }
+.refund-summary-row { display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-bottom:1px solid #f5f5f5; color:#555; }
+.refund-summary-row:last-child { border-bottom:none; }
+.refund-summary-row.total-row { font-size:16px; font-weight:800; color:#111; border-top:2px solid #e8e8e8; padding-top:12px; margin-top:4px; }
+.refund-summary-row.total-row .refund-amt { color:#e31837; }
+.return-success-wrap { text-align:center; padding:48px 32px; }
+.return-success-icon { width:72px; height:72px; background:#dcfce7; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:32px; }
+.return-success-title { font-size:22px; font-weight:800; color:#111; margin-bottom:10px; }
+.return-success-subtitle { font-size:14px; color:#666; margin-bottom:6px; }
+.return-success-detail { font-size:13px; color:#888; margin-bottom:32px; }
+.return-detail-card { border:1px solid #e8e8e8; border-radius:10px; padding:20px 24px; max-width:480px; margin:0 auto 32px; text-align:left; }
+.return-detail-row { display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-bottom:1px solid #f5f5f5; color:#555; }
+.return-detail-row:last-child { border-bottom:none; }
+.return-detail-row .label { color:#888; }
+.return-detail-row .value { font-weight:600; color:#111; }
+.btn-return-home { padding:12px 32px; background:#e31837; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <span class="hamburger">☰</span>
+    <div class="bjs-logo"><img src="data:image/png;base64,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" alt="BJ's" /></div>
+    <span class="app-name">BJ's Order Management System - Call Center</span>
+  </div>
+  <div class="header-right">
+    <div><span class="user-name">John Smith</span><span class="user-role">CSC Manager</span></div>
+    <span style="color:#aaa;font-size:12px;margin-left:4px;">▾</span>
+    <span class="header-logout">⎋</span>
+  </div>
+</div>
+
+<!-- BREADCRUMB -->
+<div style="padding:10px 48px; font-size:13px; color:#666; border-bottom:1px solid #f0f0f0; background:#fff; flex-shrink:0;">
+  <a href="#" style="color:#2563eb; text-decoration:none;">Home</a>
+  <span style="margin:0 6px; color:#aaa;">/</span>
+  <span style="color:#444;">BJ's Order Management System - Call Center</span>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDE NAV -->
+  <div <div class="sidenav"><div class="nav-steps">
+  <div class="nav-step">
+    <div class="nav-icon-wrap" id="nwrap-0">
+      <div class="nav-circle active" id="ncircle-0">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" id="nsvg-0" style="stroke:#fff"><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>
+      </div>
+      <div class="nav-check" id="ncheck-0" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="stroke:#fff"><polyline points="20 6 9 17 4 12"/></svg></div>
+    </div>
+    <div class="nav-step-label active" id="nlabel-0">Customer &amp;<br>Orders</div>
+  </div>
+  <div class="nav-step">
+    <div class="nav-connector" id="nconn-1"></div>
+    <div class="nav-icon-wrap" id="nwrap-1" onclick="goToStep(1)" style="cursor:pointer">
+      <div class="nav-circle" id="ncircle-1">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" id="nsvg-1" style="stroke:#999"><circle cx='9' cy='21' r='1'/><circle cx='20' cy='21' r='1'/><path d='M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6'/></svg>
+      </div>
+      <div class="nav-check" id="ncheck-1" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="stroke:#fff"><polyline points="20 6 9 17 4 12"/></svg></div>
+    </div>
+    <div class="nav-step-label inactive" id="nlabel-1">Create Order</div>
+  </div>
+  <div class="nav-step">
+    <div class="nav-connector" id="nconn-2"></div>
+    <div class="nav-icon-wrap" id="nwrap-2" style="cursor:pointer">
+      <div class="nav-circle" id="ncircle-2">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" id="nsvg-2" style="stroke:#999"><rect x='1' y='3' width='15' height='13'/><polygon points='16 8 20 8 23 11 23 16 16 16 16 8'/><circle cx='5.5' cy='18.5' r='2.5'/><circle cx='18.5' cy='18.5' r='2.5'/></svg>
+      </div>
+      <div class="nav-check" id="ncheck-2" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="stroke:#fff"><polyline points="20 6 9 17 4 12"/></svg></div>
+    </div>
+    <div class="nav-step-label inactive" id="nlabel-2">Fulfillment</div>
+  </div>
+  <div class="nav-step">
+    <div class="nav-connector" id="nconn-3"></div>
+    <div class="nav-icon-wrap" id="nwrap-3" style="cursor:pointer">
+      <div class="nav-circle" id="ncircle-3">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" id="nsvg-3" style="stroke:#999"><rect x='1' y='4' width='22' height='16' rx='2'/><line x1='1' y1='10' x2='23' y2='10'/></svg>
+      </div>
+      <div class="nav-check" id="ncheck-3" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="stroke:#fff"><polyline points="20 6 9 17 4 12"/></svg></div>
+    </div>
+    <div class="nav-step-label inactive" id="nlabel-3">Review &amp;<br>Payment</div>
+  </div>
+</div></div>
+
+  <!-- CONTENT -->
+  <div class="content" id="main-content">
+
+    <!-- PAGE 1: CUSTOMER & ORDERS -->
+    <div id="page-1" class="page active">
+
+
+    <div class="page-title-row">
+      <div class="page-title">Customer &amp; Orders</div>
+      <div class="action-btns">
+        <button class="btn-next" onclick="goToStep(1)">Start Order →</button>
+      </div>
+    </div>
+    <p class="page-subtitle">Search for an existing order or customer to get started, or create a new customer profile.</p>
+
+    <!-- OPTION CARDS -->
+    <div class="option-cards">
+      <div class="option-card selected" id="card-order" onclick="switchMode('order')">
+        <div class="card-icon-wrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        </div>
+        <span class="card-label">Search Existing Order</span>
+        <div class="radio"><div class="radio-dot"></div></div>
+      </div>
+      <div class="option-card" id="card-customer" onclick="switchMode('customer')">
+        <div class="card-icon-wrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <span class="card-label">Search Customer</span>
+        <div class="radio"><div class="radio-dot"></div></div>
+      </div>
+      <div class="option-card" id="card-new" onclick="switchMode('new')">
+        <div class="card-icon-wrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
+        </div>
+        <span class="card-label">Create New Customer</span>
+        <div class="radio"><div class="radio-dot"></div></div>
+      </div>
+    </div>
+
+    <!-- PANEL: SEARCH ORDER -->
+    <div id="panel-order">
+      <div class="search-panel">
+        <div class="search-panel-header">
+          <div class="search-panel-title">Search Existing Order</div>
+          <div class="search-tips">Search tips <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+        </div>
+        <div class="tabs">
+          <div class="tab active" onclick="switchOrderTab(this,'otab-number')">Order Number</div>
+          <div class="tab" onclick="switchOrderTab(this,'otab-email')">Email</div>
+          <div class="tab" onclick="switchOrderTab(this,'otab-phone')">Phone</div>
+          <div class="tab" onclick="switchOrderTab(this,'otab-membership')">Membership ID</div>
+        </div>
+        <div id="otab-number" class="search-form">
+          <div class="search-fields">
+            <div class="field-wrap">
+              <label>Order Number <span class="req">*</span></label>
+              <div class="field-input">
+                <input type="text" id="order-number-input" placeholder="Enter order number" onkeydown="if(event.key==='Enter') doOrderSearch()" />
+                <span class="field-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+              </div>
+            </div>
+            <div class="field-wrap">
+              <label>Order Date <span class="opt">(Optional)</span></label>
+              <div class="field-input">
+                <span class="field-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+                <input type="text" placeholder="MM/DD/YYYY" />
+              </div>
+            </div>
+            <button class="btn-search" id="btn-order-search" onclick="doOrderSearch()">Search Order</button>
+          </div>
+        </div>
+        <div id="otab-email" class="search-form" style="display:none;">
+          <div class="search-fields-single">
+            <div class="field-wrap"><label>Email Address <span class="req">*</span></label><div class="field-input"><input type="text" placeholder="Enter email address" onkeydown="if(event.key==='Enter') doOrderSearch()" /></div></div>
+            <button class="btn-search" onclick="doOrderSearch()">Search Order</button>
+          </div>
+        </div>
+        <div id="otab-phone" class="search-form" style="display:none;">
+          <div class="search-fields-single">
+            <div class="field-wrap"><label>Phone Number <span class="req">*</span></label><div class="field-input"><input type="text" placeholder="Enter phone number" onkeydown="if(event.key==='Enter') doOrderSearch()" /></div></div>
+            <button class="btn-search" onclick="doOrderSearch()">Search Order</button>
+          </div>
+        </div>
+        <div id="otab-membership" class="search-form" style="display:none;">
+          <div class="search-fields-single">
+            <div class="field-wrap"><label>Membership ID <span class="req">*</span></label><div class="field-input"><input type="text" placeholder="Enter membership ID" onkeydown="if(event.key==='Enter') doOrderSearch()" /></div></div>
+            <button class="btn-search" onclick="doOrderSearch()">Search Order</button>
+          </div>
+        </div>
+        <div id="order-results" style="display:none;">
+          <div class="results-wrap"><div class="results-body">
+            <div class="results-title">Search Results <span>(3)</span></div>
+            <table>
+              <thead><tr><th>Order Number</th><th>Customer</th><th>Order Date</th><th>Total</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td><span class="order-num">MC20045614</span></td><td><div class="cust-name">test1 cst</div><div class="cust-email">dk91@yopmail.com</div></td><td>05/08/2026</td><td>$41.33</td><td><span class="badge badge-green">Created</span></td><td><button class="btn-select" onclick="openOrderSummary('MC20045614','05/08/2026','$41.33','Created')">Select Order</button></td></tr>
+              </tbody>
+            </table>
+          </div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL: SEARCH CUSTOMER -->
+    <div id="panel-customer" style="display:none;">
+      <div class="search-panel">
+        <div class="search-panel-header">
+          <div class="search-panel-title">Search Customer</div>
+          <div class="search-tips">Search tips <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+        </div>
+        <div class="tabs">
+          <div class="tab active" onclick="switchCustomerTab(this,'ctab-membership')">Membership ID</div>
+          <div class="tab" onclick="switchCustomerTab(this,'ctab-email')">Email</div>
+          <div class="tab" onclick="switchCustomerTab(this,'ctab-phone')">Phone</div>
+          <div class="tab" onclick="switchCustomerTab(this,'ctab-name')">Name</div>
+        </div>
+        <div id="ctab-membership" class="search-form">
+          <div class="search-fields-single"><div class="field-wrap"><label>Membership ID <span class="req">*</span></label><div class="field-input"><input type="text" placeholder="Enter membership ID" onkeydown="if(event.key==='Enter') doCustSearch()" /></div></div><button class="btn-search" onclick="doCustSearch()">Find Customer</button></div>
+        </div>
+        <div id="ctab-email" class="search-form" style="display:none;">
+          <div class="search-fields-single"><div class="field-wrap"><label>Email Address <span class="req">*</span></label><div class="field-input"><input type="text" placeholder="Enter email address" onkeydown="if(event.key==='Enter') doCustSearch()" /></div></div><button class="btn-search" onclick="doCustSearch()">Find Customer</button></div>
+        </div>
+        <div id="ctab-phone" class="search-form" style="display:none;">
+          <div class="search-fields-single"><div class="field-wrap"><label>Phone Number <span class="req">*</span></label><div class="field-input"><input type="text" placeholder="Enter phone number" onkeydown="if(event.key==='Enter') doCustSearch()" /></div></div><button class="btn-search" onclick="doCustSearch()">Find Customer</button></div>
+        </div>
+        <div id="ctab-name" class="search-form" style="display:none;">
+          <div class="search-fields"><div class="field-wrap"><label>First Name</label><div class="field-input"><input type="text" placeholder="Enter first name" /></div></div><div class="field-wrap"><label>Last Name <span class="req">*</span></label><div class="field-input"><input type="text" placeholder="Enter last name" onkeydown="if(event.key==='Enter') doCustSearch()" /></div></div><button class="btn-search" onclick="doCustSearch()">Find Customer</button></div>
+        </div>
+        <div id="customer-results" style="display:none;">
+          <div class="results-wrap"><div class="results-body">
+            <div class="results-title">Search Results <span>(2)</span></div>
+            <table>
+              <thead><tr><th>Membership ID</th><th>Customer</th><th>Phone</th><th>Member Since</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td><span class="order-num">21141198256</span></td><td><div class="cust-name">test1 cst</div><div class="cust-email">dk91@yopmail.com</div></td><td>7745023210</td><td>02/05/2024</td><td><span class="badge badge-green">Active</span></td><td><button class="btn-select">Select Customer</button></td></tr>
+                <tr><td><span class="order-num">39840000435</span></td><td><div class="cust-name">Mohammed Naumaan</div><div class="cust-email">newacc4@bjs.com</div></td><td>7745023208</td><td>11/27/2025</td><td><span class="badge badge-green">Active</span></td><td><button class="btn-select">Select Customer</button></td></tr>
+              </tbody>
+            </table>
+          </div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL: CREATE NEW CUSTOMER -->
+    <div id="panel-new" style="display:none;">
+      <div class="search-panel" style="padding:24px;">
+        <div style="font-size:16px;font-weight:700;color:#111;margin-bottom:4px;">Create New Customer</div>
+        <div style="font-size:13px;color:#888;margin-bottom:20px;">Fill in the details below to register a new BJ's member.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:680px;">
+          <div class="field-wrap"><label>First Name <span class="req">*</span></label><div class="field-input"><input type="text" placeholder="Enter first name" /></div></div>
+          <div class="field-wrap"><label>Last Name <span class="req">*</span></label><div class="field-input"><input type="text" placeholder="Enter last name" /></div></div>
+          <div class="field-wrap"><label>Email <span class="req">*</span></label><div class="field-input"><input type="text" placeholder="Enter email address" /></div></div>
+          <div class="field-wrap"><label>Phone Number</label><div class="field-input"><input type="text" placeholder="Enter phone number" /></div></div>
+          <div class="field-wrap"><label>ZIP Code <span class="req">*</span></label><div class="field-input"><input type="text" placeholder="Enter ZIP code" /></div></div>
+          <div class="field-wrap"><label>Membership ID</label><div class="field-input"><input type="text" placeholder="Auto-generated" style="color:#aaa;" /></div></div>
+        </div>
+        <div style="margin-top:20px;"><button class="btn-next" style="height:38px;padding:0 20px;font-size:13px;">Create Customer</button></div>
+      </div>
+    </div>
+
+  
+    </div>
+
+    <!-- PAGE 2: CREATE ORDER -->
+    <div id="page-2" class="page">
+
+    <div class="page-title-row">
+      <div class="page-title">Create Order</div>
+      <div class="action-btns">
+        <button class="btn-back" onclick="goToStep(0)">← Back</button>
+        <button class="btn-next" onclick="goToStep(2)">Review Fulfillment →</button>
+      </div>
+    </div>
+    <p class="page-subtitle">Add products to the order on behalf of the customer. Each item can have its own fulfillment method.</p>
+
+    <!-- CUSTOMER BANNER -->
+    <div class="customer-banner">
+      <div class="cust-avatar">T</div>
+      <div class="cust-info">
+        <div class="cust-name">test1 cst <span class="badge-green-sm">Active Member</span></div>
+        <div class="cust-meta">
+          <span>📞 7745023210</span>
+          <span>✉️ dk91@yopmail.com</span>
+          <span>🪪 #21141198256</span>
+          <span>Member since 2/5/24</span>
+        </div>
+      </div>
+      <button style="padding:7px 16px;border:1.5px solid #ccc;border-radius:6px;background:#fff;font-size:13px;font-weight:600;cursor:pointer;color:#555;flex-shrink:0;">Change Customer</button>
+    </div>
+
+    <div class="items-main">
+      <div class="items-left">
+
+        <!-- PRODUCT SEARCH -->
+        <div>
+          <div style="font-size:16px; font-weight:700; color:#111; margin-bottom:12px;">Search Products</div>
+          <div class="search-wrap">
+            <span class="search-ico">🔍</span>
+            <input class="search-input" id="product-search" placeholder="Search by name, SKU, or scan barcode..." oninput="filterProducts(this.value)" />
+          </div>
+          <div class="search-hint" id="search-hint">Type to search products</div>
+          <div class="product-list" id="product-list">
+            <div class="no-results" id="no-results" style="display:none;">No products found</div>
+            <div class="product-item" data-name="Irish Spring Original Bar Soap 25ct" data-sku="23699" data-price="5.49">
+              <div class="p-thumb">🧼</div>
+              <div class="p-info"><div class="p-name">Irish Spring Original Bar Soap 25ct</div><div class="p-sku">SKU: 23699 · <span class="p-stock-ok">✓ In stock</span></div></div>
+              <div class="p-price">$5.49</div>
+              <button class="add-btn" onclick="addItem('Irish Spring Original 25ct','23699','5.49')">+ Add</button>
+            </div>
+            <div class="product-item" data-name="Irish Spring Aloe Vera Bar Soap 20ct" data-sku="23701" data-price="4.99">
+              <div class="p-thumb">🧼</div>
+              <div class="p-info"><div class="p-name">Irish Spring Aloe Vera Bar Soap 20ct</div><div class="p-sku">SKU: 23701 · <span class="p-stock-ok">✓ In stock</span></div></div>
+              <div class="p-price">$4.99</div>
+              <button class="add-btn" onclick="addItem('Irish Spring Aloe Vera 20ct','23701','4.99')">+ Add</button>
+            </div>
+            <div class="product-item" data-name="Tide Original Laundry Detergent 150oz" data-sku="45231" data-price="22.99">
+              <div class="p-thumb">🧺</div>
+              <div class="p-info"><div class="p-name">Tide Original Laundry Detergent 150oz</div><div class="p-sku">SKU: 45231 · <span class="p-stock-ok">✓ In stock</span></div></div>
+              <div class="p-price">$22.99</div>
+              <button class="add-btn" onclick="addItem('Tide Original Laundry 150oz','45231','22.99')">+ Add</button>
+            </div>
+            <div class="product-item" data-name="Bounty Paper Towels 12-pack" data-sku="31087" data-price="18.49">
+              <div class="p-thumb">🗞️</div>
+              <div class="p-info"><div class="p-name">Bounty Paper Towels 12-pack</div><div class="p-sku">SKU: 31087 · <span class="p-stock-ok">✓ In stock</span></div></div>
+              <div class="p-price">$18.49</div>
+              <button class="add-btn" onclick="addItem('Bounty Paper Towels 12-pack','31087','18.49')">+ Add</button>
+            </div>
+            <div class="product-item" data-name="Irish Spring Body Wash 30oz" data-sku="24012" data-price="6.99">
+              <div class="p-thumb">🧴</div>
+              <div class="p-info"><div class="p-name">Irish Spring Body Wash 30oz</div><div class="p-sku">SKU: 24012 · <span class="p-stock-low">⚠ Low stock</span></div></div>
+              <div class="p-price">$6.99</div>
+              <button class="add-btn" onclick="addItem('Irish Spring Body Wash 30oz','24012','6.99')">+ Add</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ORDER LINES TABLE -->
+        <div>
+          <div style="font-size:16px; font-weight:700; color:#111; margin-bottom:12px;">Order Lines</div>
+          <div class="order-table">
+            <div class="ot-head" style="grid-template-columns:2fr 80px 70px 140px 30px;">
+              <span>Item</span><span>Qty</span><span>Price</span><span>Fulfillment</span><span></span>
+            </div>
+            <div id="order-lines"><div class="ot-empty">No items added yet — use the search above</div></div>
+            <div class="ot-footer"><div class="ot-total">Order Total <span id="order-total">$0.00</span></div></div>
+          </div>
+          <div style="font-size:11px; color:#aaa; margin-top:6px;">💡 Fulfillment method can be set per item. Final fulfillment details are confirmed in the next step.</div>
+        </div>
+
+      </div>
+
+      <!-- SIDEBAR -->
+      <div class="sidebar">
+        <div style="font-size:16px; font-weight:700; color:#111; margin-bottom:14px;">Order Summary</div>
+        <div class="sb-row"><span>Subtotal</span><span id="sb-subtotal">$0.00</span></div>
+        <div class="sb-row"><span>Shipping</span><span>$0.00</span></div>
+        <div class="sb-row"><span>Promotions</span><span style="color:#15803d;">−$0.00</span></div>
+        <div class="sb-row"><span>Taxes (est.)</span><span id="sb-taxes">$0.00</span></div>
+        <div class="sb-row total"><span>Total</span><span class="amt" id="sb-total">$0.00</span></div>
+        <div class="promo-wrap">
+          <input placeholder="Promo / coupon code..." />
+          <button class="promo-btn">Apply</button>
+        </div>
+        <div class="sb-divider"></div>
+        <div class="sb-section">Order Notes</div>
+        <textarea class="notes-ta" rows="3" placeholder="Add notes visible to the associate only..."></textarea>
+        <div class="sb-divider"></div>
+        <div class="sb-section">Quick Actions</div>
+        <div class="qa-item">🔄 Modify Existing Order</div>
+        <div class="qa-item">↩️ Create Return</div>
+        <div class="qa-item">🔒 Resolve Hold</div>
+        <div class="qa-item">🎫 Add/Remove Promotions</div>
+        <div class="qa-item">💳 Issue Credit</div>
+      </div>
+    </div>
+
+    </div>
+
+
+    <!-- PAGE 3: FULFILLMENT -->
+    <div id="page-3" class="page">
+
+      <div class="page-title-row">
+        <div class="page-title">Fulfillment</div>
+        <div class="action-btns">
+          <button class="btn-back" onclick="goToStep(1)">← Back</button>
+          <button class="btn-next" onclick="goToStep(3)">Review &amp; Payment →</button>
+        </div>
+      </div>
+      <p class="page-subtitle">Select how each item will be delivered or picked up. Confirm the club location and schedule a time slot.</p>
+
+      <!-- CUSTOMER BANNER -->
+      <div class="customer-banner">
+        <div class="cust-avatar">T</div>
+        <div class="cust-info">
+          <div class="cust-name">test1 cst <span class="badge-green-sm">Active Member</span></div>
+          <div class="cust-meta">
+            <span>📞 7745023210</span>
+            <span>✉️ dk91@yopmail.com</span>
+            <span>🪪 #21141198256</span>
+            <span>Member since 2/5/24</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ORDER LINES SUMMARY -->
+      <div class="fulfill-section">
+        <div class="fulfill-section-title">Order Lines</div>
+        <div class="order-review">
+          <div class="order-review-header">
+            <span>Item</span><span>Qty</span><span>Price</span><span>Fulfillment</span>
+          </div>
+          <div class="order-review-row">
+            <div><div style="font-weight:600;">Irish Spring Original Bar Soap 25ct</div><div style="font-size:11px;color:#aaa;">SKU: 23699</div></div>
+            <div>1</div>
+            <div style="font-weight:700;color:#e31837;">$5.49</div>
+            <div><span style="background:#dbeafe;color:#1d4ed8;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;">Club Pickup</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FULFILLMENT METHOD -->
+      <div class="fulfill-section">
+        <div class="fulfill-section-title">Fulfillment Method</div>
+        <div class="fulfill-opts">
+          <div class="f-opt selected" onclick="selectFulfill(this, 'pickup')">
+            <span class="f-icon">🏪</span>
+            <div class="f-label">Club Pickup</div>
+            <div class="f-desc">Pick up at your local BJ's club</div>
+          </div>
+          <div class="f-opt" onclick="selectFulfill(this, 'ship-home')">
+            <span class="f-icon">🏠</span>
+            <div class="f-label">Ship to Home</div>
+            <div class="f-desc">Delivered to customer's address</div>
+          </div>
+          <div class="f-opt" onclick="selectFulfill(this, 'same-day')">
+            <span class="f-icon">⚡</span>
+            <div class="f-label">Same Day Delivery</div>
+            <div class="f-desc">Delivered today via Instacart</div>
+          </div>
+          <div class="f-opt" onclick="selectFulfill(this, 'sfc')">
+            <span class="f-icon">📦</span>
+            <div class="f-label">Ship from Club</div>
+            <div class="f-desc">Shipped directly from club inventory</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLUB SELECTION + SLOT (shown for Club Pickup) -->
+      <div id="fulfill-pickup" class="fulfill-section">
+        <div class="fulfill-section-title">Club Location &amp; Pickup Slot</div>
+        <div class="form-grid" style="margin-bottom:20px;">
+          <div class="form-field">
+            <label>Club Location <span class="req">*</span></label>
+            <select>
+              <option>BJ's Pensacola — 7000 N Davis Hwy Unit 5 (2.2 mi)</option>
+              <option>BJ's Hudson — 1 Highland Commons West (8.1 mi)</option>
+              <option>BJ's Auburn — 658 Auburn St (12.4 mi)</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Pickup Date <span class="req">*</span></label>
+            <input type="text" value="05/08/2026" />
+          </div>
+        </div>
+        <div class="form-field" style="margin-bottom:8px;">
+          <label>Available Time Slots</label>
+        </div>
+        <div class="slot-grid">
+          <div class="slot-btn unavailable">10:00–11:00 AM</div>
+          <div class="slot-btn unavailable">11:00 AM–12:00 PM</div>
+          <div class="slot-btn selected" onclick="selectSlot(this)">1:00–2:00 PM</div>
+          <div class="slot-btn" onclick="selectSlot(this)">2:00–3:00 PM</div>
+          <div class="slot-btn" onclick="selectSlot(this)">3:00–4:00 PM</div>
+          <div class="slot-btn" onclick="selectSlot(this)">4:00–5:00 PM</div>
+          <div class="slot-btn" onclick="selectSlot(this)">5:00–6:00 PM</div>
+          <div class="slot-btn unavailable">6:00–7:00 PM</div>
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-top:8px;">🔴 Unavailable &nbsp;&nbsp; Available slots shown for 05/08/2026</div>
+      </div>
+
+      <!-- SHIP TO HOME (hidden by default) -->
+      <div id="fulfill-ship-home" class="fulfill-section" style="display:none;">
+        <div class="fulfill-section-title">Shipping Address</div>
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Street Address <span class="req">*</span></label>
+            <input type="text" placeholder="Enter street address" value="1320 Pinnacle Dr" />
+          </div>
+          <div class="form-field">
+            <label>City <span class="req">*</span></label>
+            <input type="text" value="Pensacola" />
+          </div>
+          <div class="form-field">
+            <label>State <span class="req">*</span></label>
+            <input type="text" value="FL" />
+          </div>
+          <div class="form-field">
+            <label>ZIP Code <span class="req">*</span></label>
+            <input type="text" value="32504" />
+          </div>
+        </div>
+        <div style="margin-top:12px;">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#555;cursor:pointer;">
+            <input type="checkbox" /> Use membership address on file
+          </label>
+        </div>
+      </div>
+
+      <!-- SAME DAY (hidden by default) -->
+      <div id="fulfill-same-day" class="fulfill-section" style="display:none;">
+        <div class="fulfill-section-title">Same Day Delivery Details</div>
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Delivery Address <span class="req">*</span></label>
+            <input type="text" value="1320 Pinnacle Dr, Pensacola FL 32504" />
+          </div>
+          <div class="form-field">
+            <label>Preferred Delivery Window</label>
+            <select>
+              <option>ASAP (1–2 hours)</option>
+              <option>2:00–4:00 PM</option>
+              <option>4:00–6:00 PM</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- SFC (hidden by default) -->
+      <div id="fulfill-sfc" class="fulfill-section" style="display:none;">
+        <div class="fulfill-section-title">Ship from Club — Shipping Details</div>
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Ship From Club <span class="req">*</span></label>
+            <select>
+              <option>BJ's Pensacola — 2.2 mi</option>
+              <option>BJ's Hudson — 8.1 mi</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Ship To Address <span class="req">*</span></label>
+            <input type="text" value="1320 Pinnacle Dr, Pensacola FL 32504" />
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- PAGE 4: REVIEW & PAYMENT -->
+    <div id="page-4" class="page">
+
+      <div class="page-title-row">
+        <div class="page-title">Review &amp; Payment</div>
+        <div class="action-btns">
+          <button class="btn-back" onclick="goToStep(2)">← Back</button>
+          <button class="btn-next" onclick="confirmOrder()" >✓ Confirm Order</button>
+        </div>
+      </div>
+      <p class="page-subtitle">Review the order details and select a payment method before confirming.</p>
+
+      <!-- CUSTOMER BANNER -->
+      <div class="customer-banner">
+        <div class="cust-avatar">T</div>
+        <div class="cust-info">
+          <div class="cust-name">test1 cst <span class="badge-green-sm">Active Member</span></div>
+          <div class="cust-meta">
+            <span>📞 7745023210</span>
+            <span>✉️ dk91@yopmail.com</span>
+            <span>🪪 #21141198256</span>
+            <span>Member since 2/5/24</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 360px; gap:24px;">
+
+        <!-- LEFT COLUMN: Review details -->
+        <div>
+
+          <!-- ORDER LINES -->
+          <div class="review-section">
+            <div class="review-card">
+              <div class="review-card-header">
+                <div class="review-card-title">🛍 Order Lines</div>
+                <span class="review-card-edit" onclick="goToStep(1)">Edit Items</span>
+              </div>
+              <div class="review-card-body">
+                <div style="display:grid; grid-template-columns:2fr 60px 80px 120px; gap:8px; font-size:11px; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid #f0f0f0;">
+                  <span>Item</span><span>Qty</span><span>Price</span><span>Fulfillment</span>
+                </div>
+                <div style="display:grid; grid-template-columns:2fr 60px 80px 120px; gap:8px; align-items:center;">
+                  <div>
+                    <div style="font-size:13px; font-weight:600;">Irish Spring Original Bar Soap 25ct</div>
+                    <div style="font-size:11px; color:#aaa;">SKU: 23699</div>
+                  </div>
+                  <div style="font-size:13px;">1</div>
+                  <div style="font-size:13px; font-weight:700; color:#e31837;">$5.49</div>
+                  <div><span style="background:#dbeafe; color:#1d4ed8; font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px;">Club Pickup</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- FULFILLMENT DETAILS -->
+          <div class="review-section">
+            <div class="review-card">
+              <div class="review-card-header">
+                <div class="review-card-title">🚚 Fulfillment Details</div>
+                <span class="review-card-edit" onclick="goToStep(2)">Edit Fulfillment</span>
+              </div>
+              <div class="review-card-body">
+                <div class="review-row"><span class="label">Method</span><span class="value">Club Pickup</span></div>
+                <div class="review-row"><span class="label">Club Location</span><span class="value">BJ's Pensacola — 7000 N Davis Hwy Unit 5</span></div>
+                <div class="review-row"><span class="label">Pickup Date</span><span class="value">05/08/2026</span></div>
+                <div class="review-row"><span class="label">Pickup Time</span><span class="value">1:00 PM – 2:00 PM EST</span></div>
+                <div class="review-row"><span class="label">Bill To</span><span class="value">1320 Pinnacle Dr, Pensacola FL 32504</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PAYMENT METHOD -->
+          <div class="review-section">
+            <div class="review-card-title" style="margin-bottom:14px;">💳 Payment Method</div>
+            <p style="font-size:13px; color:#888; margin-bottom:16px;">Select the payment method provided by the customer.</p>
+            <div class="payment-methods">
+              <div class="payment-method selected" onclick="selectPayment(this)">
+                <div class="pm-icon">💳</div>
+                <div class="pm-info">
+                  <div class="pm-name">Credit / Debit Card</div>
+                  <div class="pm-detail">Customer provides card details during the call</div>
+                </div>
+                <div class="pm-radio"><div class="pm-dot"></div></div>
+              </div>
+              <div class="payment-method" onclick="selectPayment(this)">
+                <div class="pm-icon">🎁</div>
+                <div class="pm-info">
+                  <div class="pm-name">Gift Card</div>
+                  <div class="pm-detail">Apply BJ's gift card balance</div>
+                </div>
+                <div class="pm-radio"><div class="pm-dot"></div></div>
+              </div>
+              <div class="payment-method" onclick="selectPayment(this)">
+                <div class="pm-icon">⭐</div>
+                <div class="pm-info">
+                  <div class="pm-name">Membership Awards / Points</div>
+                  <div class="pm-detail">Available balance: $12.50</div>
+                </div>
+                <div class="pm-radio"><div class="pm-dot"></div></div>
+              </div>
+              <div class="payment-method" onclick="selectPayment(this)">
+                <div class="pm-icon">📱</div>
+                <div class="pm-info">
+                  <div class="pm-name">PayPal / Digital Wallet</div>
+                  <div class="pm-detail">d11@demo.com</div>
+                </div>
+                <div class="pm-radio"><div class="pm-dot"></div></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: Pricing summary -->
+        <div>
+          <div class="review-card" style="position:sticky; top:0;">
+            <div class="review-card-header">
+              <div class="review-card-title">Order Summary</div>
+              <span style="font-size:12px; color:#888;">Draft MC20045614</span>
+            </div>
+            <div class="review-card-body">
+              <div class="pricing-table">
+                <div class="pricing-row"><span>Subtotal</span><span>$5.49</span></div>
+                <div class="pricing-row"><span>Sales Order Shipping</span><span>$0.00</span></div>
+                <div class="pricing-row"><span>Surcharge</span><span>$0.00</span></div>
+                <div class="pricing-row discount"><span>Promotions</span><span>−$5.00</span></div>
+                <div class="pricing-row"><span>Taxes</span><span>$0.39</span></div>
+                <div class="pricing-row"><span>Fees</span><span>$0.00</span></div>
+                <div class="pricing-row discount"><span>Awards</span><span>$0.00</span></div>
+                <div class="pricing-row discount"><span>Coupon Discount</span><span>($0.00)</span></div>
+                <div class="pricing-row total-row"><span>Total</span><span class="amt">$0.88</span></div>
+              </div>
+
+              <div style="margin-top:16px;">
+                <div class="form-field">
+                  <label>Promotion Code</label>
+                  <div style="display:flex; gap:8px; margin-top:4px;">
+                    <input type="text" placeholder="Enter promo code..." style="flex:1; padding:8px 10px; border:1.5px solid #d0d0d0; border-radius:6px; font-size:12px; outline:none;" />
+                    <button style="padding:8px 14px; background:#fff; border:1.5px solid #ccc; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; color:#333;">Apply</button>
+                  </div>
+                </div>
+              </div>
+
+              <button class="confirm-btn" onclick="confirmOrder()">✓ Confirm &amp; Place Order</button>
+
+              <div style="margin-top:12px; font-size:11px; color:#aaa; text-align:center; line-height:1.5;">
+                By confirming, the associate places this order on behalf of the customer per BJ's call center policy.
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- end content -->
+</div><!-- end layout -->
+
+
+
+</div><!-- end shell -->
+
+<script>
+
+function switchMode(mode) {
+  ['order','customer','new'].forEach(function(m) {
+    document.getElementById('card-'+m).classList.toggle('selected', m===mode);
+    document.getElementById('panel-'+m).style.display = m===mode ? 'block' : 'none';
+  });
+  ['order-results','customer-results'].forEach(function(id) {
+    var el=document.getElementById(id); if(el) el.style.display='none';
+  });
+}
+function switchOrderTab(el, tabId) {
+  document.querySelectorAll('#panel-order .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['otab-number','otab-email','otab-phone','otab-membership'].forEach(function(id) {
+    document.getElementById(id).style.display = id===tabId ? 'block' : 'none';
+  });
+  document.getElementById('order-results').style.display='none';
+}
+function switchCustomerTab(el, tabId) {
+  document.querySelectorAll('#panel-customer .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['ctab-membership','ctab-email','ctab-phone','ctab-name'].forEach(function(id) {
+    document.getElementById(id).style.display = id===tabId ? 'block' : 'none';
+  });
+  document.getElementById('customer-results').style.display='none';
+}
+function doOrderSearch() {
+  var btn=document.getElementById('btn-order-search')||event.target;
+  var orig=btn.textContent;
+  btn.textContent='Searching...'; btn.disabled=true; btn.style.opacity='0.7';
+  setTimeout(function() {
+    btn.textContent=orig; btn.disabled=false; btn.style.opacity='1';
+    var r=document.getElementById('order-results');
+    r.style.display='block';
+    r.scrollIntoView({behavior:'smooth',block:'nearest'});
+  },800);
+}
+function doCustSearch() {
+  var btn=event.target;
+  var orig=btn.textContent;
+  btn.textContent='Searching...'; btn.disabled=true; btn.style.opacity='0.7';
+  setTimeout(function() {
+    btn.textContent=orig; btn.disabled=false; btn.style.opacity='1';
+    var r=document.getElementById('customer-results');
+    r.style.display='block';
+    r.scrollIntoView({behavior:'smooth',block:'nearest'});
+  },800);
+}
+
+
+var currentStep = 0;
+
+function goToStep(idx) {
+  if (idx < 0 || idx > 3) return;
+  currentStep = idx;
+
+  // Show/hide pages
+  document.getElementById('page-1').style.display = idx === 0 ? 'block' : 'none';
+  document.getElementById('page-2').style.display = idx === 1 ? 'block' : 'none';
+  document.getElementById('page-3').style.display = idx === 2 ? 'block' : 'none';
+  document.getElementById('page-4').style.display = idx === 3 ? 'block' : 'none';
+
+  // Update bottom bar
+  var labels = ['Step 1 of 4 · Customer & Orders', 'Step 2 of 4 · Create Order'];
+
+  document.getElementById('main-content').scrollTop = 0;
+
+  // Update nav step 0 (Customer & Orders)
+  var c0 = document.getElementById('ncircle-0');
+  var l0 = document.getElementById('nlabel-0');
+  var s0 = document.getElementById('nsvg-0');
+  var k0 = document.getElementById('ncheck-0');
+  if (idx === 0) {
+    c0.className = 'nav-circle active'; s0.style.stroke = '#fff';
+    l0.className = 'nav-step-label active'; k0.style.display = 'none';
+  } else {
+    c0.className = 'nav-circle done'; s0.style.stroke = '#aaa';
+    l0.className = 'nav-step-label done'; k0.style.display = 'flex';
+  }
+
+  // Update nav step 1 (Create Order)
+  var c1 = document.getElementById('ncircle-1');
+  var l1 = document.getElementById('nlabel-1');
+  var s1 = document.getElementById('nsvg-1');
+  var k1 = document.getElementById('ncheck-1');
+  if (idx === 1) {
+    c1.className = 'nav-circle active'; s1.style.stroke = '#fff';
+    l1.className = 'nav-step-label active';
+    if (k1) k1.style.display = 'none';
+  } else if (idx > 1) {
+    c1.className = 'nav-circle done'; s1.style.stroke = '#aaa';
+    l1.className = 'nav-step-label done';
+    if (k1) k1.style.display = 'flex';
+  } else {
+    c1.className = 'nav-circle'; s1.style.stroke = '#999';
+    l1.className = 'nav-step-label inactive';
+    if (k1) k1.style.display = 'none';
+  }
+
+  // Update nav step 2 (Fulfillment)
+  var c2 = document.getElementById('ncircle-2');
+  var l2 = document.getElementById('nlabel-2');
+  var s2 = document.getElementById('nsvg-2');
+  var k2 = document.getElementById('ncheck-2');
+  if (c2) {
+    if (idx === 2) {
+      c2.className = 'nav-circle active'; s2.style.stroke = '#fff';
+      l2.className = 'nav-step-label active';
+      if (k2) k2.style.display = 'none';
+    } else if (idx > 2) {
+      c2.className = 'nav-circle done'; s2.style.stroke = '#aaa';
+      l2.className = 'nav-step-label done';
+      if (k2) k2.style.display = 'flex';
+    } else {
+      c2.className = 'nav-circle'; s2.style.stroke = '#999';
+      l2.className = 'nav-step-label inactive';
+      if (k2) k2.style.display = 'none';
+    }
+  }
+
+  // Update nav step 3 (Review & Payment)
+  var c3 = document.getElementById('ncircle-3');
+  var l3 = document.getElementById('nlabel-3');
+  var s3 = document.getElementById('nsvg-3');
+  if (c3) {
+    if (idx === 3) { c3.className = 'nav-circle active'; s3.style.stroke = '#fff'; l3.className = 'nav-step-label active'; }
+    else { c3.className = 'nav-circle'; s3.style.stroke = '#999'; l3.className = 'nav-step-label inactive'; }
+  }
+
+  // Connectors
+  var conn1 = document.getElementById('nconn-1');
+  var conn2 = document.getElementById('nconn-2');
+  var conn3 = document.getElementById('nconn-3');
+  if (conn1) conn1.className = 'nav-connector';
+  if (conn2) conn2.className = 'nav-connector';
+  if (conn3) conn3.className = 'nav-connector';
+}
+
+function goNext() { goToStep(currentStep + 1); }
+function goBack() { goToStep(currentStep - 1); }
+
+var NAV_CONFIG = [
+  { label:'Customer &amp;<br>Orders',
+    icon:"<path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/>" },
+  { label:'Create Order',
+    icon:"<circle cx='9' cy='21' r='1'/><circle cx='20' cy='21' r='1'/><path d='M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6'/>" },
+  { label:'Fulfillment',
+    icon:"<rect x='1' y='3' width='15' height='13'/><polygon points='16 8 20 8 23 11 23 16 16 16 16 8'/><circle cx='5.5' cy='18.5' r='2.5'/><circle cx='18.5' cy='18.5' r='2.5'/>" },
+  { label:'Review &amp;<br>Payment',
+    icon:"<rect x='1' y='4' width='22' height='16' rx='2'/><line x1='1' y1='10' x2='23' y2='10'/>" },
+];
+
+function updateNav(activeIdx) {
+  for (var i = 0; i < 4; i++) {
+    var isActive = i === activeIdx;
+    var isDone   = i < activeIdx;
+    var circle = document.getElementById('ncircle-' + i);
+    var label  = document.getElementById('nlabel-'  + i);
+    var check  = document.getElementById('ncheck-'  + i);
+    var svg    = document.getElementById('nsvg-'    + i);
+    var wrap   = document.getElementById('nwrap-'   + i);
+    var conn   = document.getElementById('nconn-'   + i);
+    if (!circle) continue;
+    circle.className = 'nav-circle' + (isActive ? ' active' : (isDone ? ' done' : ''));
+    label.className  = 'nav-step-label ' + (isActive ? 'active' : (isDone ? 'done' : 'inactive'));
+    if (svg)   svg.style.stroke = isActive ? '#fff' : (isDone ? '#aaa' : '#999');
+    if (check) check.style.display = isDone ? 'flex' : 'none';
+    if (wrap)  wrap.style.cursor = isActive ? 'default' : 'pointer';
+    if (conn)  conn.className = 'nav-connector' + (isDone ? ' done' : '');
+  }
+}
+
+// Products
+var items = [];
+function filterProducts(val) {
+  var rows = document.querySelectorAll('#product-list .product-item');
+  var noRes = document.getElementById('no-results');
+  var hint = document.getElementById('search-hint');
+  var v = val.toLowerCase().trim();
+  var visible = 0;
+  for (var i = 0; i < rows.length; i++) {
+    var show = !v || rows[i].getAttribute('data-name').toLowerCase().indexOf(v) > -1 || rows[i].getAttribute('data-sku').indexOf(v) > -1;
+    rows[i].style.display = show ? 'flex' : 'none';
+    if (show) visible++;
+  }
+  noRes.style.display = visible === 0 ? 'block' : 'none';
+  hint.textContent = v ? visible + ' result' + (visible !== 1 ? 's' : '') + ' for "' + val + '"' : 'Type to search products';
+}
+function addItem(name, sku, price) {
+  for (var i = 0; i < items.length; i++) { if (items[i].sku === sku) { items[i].qty++; renderLines(); return; } }
+  items.push({ name:name, sku:sku, price:parseFloat(price), qty:1 });
+  renderLines();
+}
+function changeQty(sku, delta) {
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].sku === sku) { items[i].qty += delta; if (items[i].qty <= 0) items.splice(i,1); break; }
+  }
+  renderLines();
+}
+function removeItem(sku) {
+  for (var i = 0; i < items.length; i++) { if (items[i].sku === sku) { items.splice(i,1); break; } }
+  renderLines();
+}
+function renderLines() {
+  var c = document.getElementById('order-lines');
+  if (!items.length) { 
+    c.innerHTML = '<div class="ot-empty">No items added yet — use the search above</div>'; 
+    updateTotals(0); 
+    return; 
+  }
+  var sub = 0; var html = '';
+  var fulfillOpts = ['Club Pickup','Ship to Home','Same Day','Ship from Club'];
+  for (var i = 0; i < items.length; i++) {
+    var it = items[i]; sub += it.price * it.qty;
+    var fulfill = it.fulfill || 'Club Pickup';
+    var opts = fulfillOpts.map(function(o) {
+      return '<option' + (o === fulfill ? ' selected' : '') + '>' + o + '</option>';
+    }).join('');
+    html += '<div class="ot-row" style="grid-template-columns:2fr 80px 70px 140px 30px;">' +
+      '<div><div style="font-size:13px;font-weight:600;">' + it.name + '</div><div style="font-size:11px;color:#aaa;">SKU: ' + it.sku + '</div></div>' +
+      '<div class="qty-ctrl">' +
+        '<button class="qty-btn" onclick="changeQty(\'' + it.sku + '\',-1)">−</button>' +
+        '<input type="number" min="1" value="' + it.qty + '" style="width:36px;text-align:center;border:1px solid #ddd;border-radius:4px;font-size:13px;font-weight:700;padding:2px;" onchange="setQty(\'' + it.sku + '\',this.value)" />' +
+        '<button class="qty-btn" onclick="changeQty(\'' + it.sku + '\',1)">+</button>' +
+      '</div>' +
+      '<div style="font-size:13px;font-weight:700;color:#e31837;">$' + (it.price*it.qty).toFixed(2) + '</div>' +
+      '<select style="font-size:11px;border:1px solid #ddd;border-radius:4px;padding:3px 6px;color:#555;outline:none;" onchange="setFulfill(\'' + it.sku + '\',this.value)">' + opts + '</select>' +
+      '<button class="del-btn" onclick="removeItem(\'' + it.sku + '\')">✕</button>' +
+      '</div>';
+  }
+  c.innerHTML = html;
+  updateTotals(sub);
+}
+
+function setQty(sku, val) {
+  var qty = parseInt(val);
+  if (isNaN(qty) || qty < 1) qty = 1;
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].sku === sku) { items[i].qty = qty; break; }
+  }
+  renderLines();
+}
+
+function setFulfill(sku, val) {
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].sku === sku) { items[i].fulfill = val; break; }
+  }
+}
+
+function updateTotals(sub) {
+  var tax = sub*0.07; var tot = sub+tax;
+  document.getElementById('order-total').textContent = '$'+tot.toFixed(2);
+  document.getElementById('sb-subtotal').textContent = '$'+sub.toFixed(2);
+  document.getElementById('sb-taxes').textContent = '$'+tax.toFixed(2);
+  document.getElementById('sb-total').textContent = '$'+tot.toFixed(2);
+}
+
+
+function selectFulfill(el, type) {
+  var opts = document.querySelectorAll('.f-opt');
+  for (var i = 0; i < opts.length; i++) { opts[i].classList.remove('selected'); }
+  el.classList.add('selected');
+  var panels = ['fulfill-pickup','fulfill-ship-home','fulfill-same-day','fulfill-sfc'];
+  var map = { 'pickup':'fulfill-pickup', 'ship-home':'fulfill-ship-home', 'same-day':'fulfill-same-day', 'sfc':'fulfill-sfc' };
+  for (var i = 0; i < panels.length; i++) {
+    var p = document.getElementById(panels[i]);
+    if (p) p.style.display = (panels[i] === map[type]) ? 'block' : 'none';
+  }
+}
+
+function selectSlot(el) {
+  var slots = document.querySelectorAll('.slot-btn:not(.unavailable)');
+  for (var i = 0; i < slots.length; i++) { slots[i].classList.remove('selected'); }
+  el.classList.add('selected');
+}
+
+function selectPayment(el) {
+  var methods = document.querySelectorAll('.payment-method');
+  for (var i = 0; i < methods.length; i++) { methods[i].classList.remove('selected'); }
+  el.classList.add('selected');
+}
+
+function confirmOrder() {
+  // Show confirmation modal
+  var modal = document.getElementById('confirm-modal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeModal() {
+  var modal = document.getElementById('confirm-modal');
+  if (modal) modal.style.display = 'none';
+}
+</script>
+
+<!-- ============================================================ -->
+<!-- ORDER SUMMARY MODAL                                        -->
+<!-- ============================================================ -->
+<div id="order-summary-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:12px; padding:0; max-width:680px; width:92%; box-shadow:0 20px 60px rgba(0,0,0,0.2); overflow:hidden; max-height:90vh; overflow-y:auto;">
+
+    <div style="background:#111; padding:16px 24px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:10;">
+      <div style="color:#fff; font-size:16px; font-weight:700;">Order Summary</div>
+      <button onclick="closeOrderSummary()" style="background:none;border:none;color:#aaa;font-size:22px;cursor:pointer;line-height:1;">×</button>
+    </div>
+
+    <div style="padding:24px;">
+
+      <!-- Customer -->
+      <div class="customer-banner" style="margin-bottom:20px;">
+        <div class="cust-avatar">T</div>
+        <div class="cust-info">
+          <div class="cust-name">test1 cst <span class="badge-green-sm">Active Member</span></div>
+          <div class="cust-meta">
+            <span>📞 7745023210</span>
+            <span>✉️ dk91@yopmail.com</span>
+            <span>🪪 #21141198256</span>
+            <span>Member since 2/5/24</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order info -->
+      <div class="order-info-grid" style="margin-bottom:20px;">
+        <div class="order-info-item"><label>Order Number</label><span id="osm-number" style="color:#e31837;">MC20045614</span></div>
+        <div class="order-info-item"><label>Order Date</label><span id="osm-date">05/08/2026</span></div>
+        <div class="order-info-item"><label>Status</label><span id="osm-status">Created</span></div>
+        <div class="order-info-item"><label>Total</label><span id="osm-total">$41.33</span></div>
+        <div class="order-info-item"><label>Club</label><span>BJ's Pensacola</span></div>
+        <div class="order-info-item"><label>Payment</label><span>MASTERCARD ····2205</span></div>
+      </div>
+
+      <!-- Items -->
+      <div style="font-size:16px;font-weight:700;color:#444;margin-bottom:10px;">Items Ordered</div>
+      <div class="return-items-table" style="margin-bottom:24px;">
+        <div class="return-items-head" style="grid-template-columns:2fr 50px 70px 120px 90px;">
+          <span>Item</span><span>Qty</span><span>Price</span><span>Fulfillment</span><span>Status</span>
+        </div>
+        <div class="return-items-row" style="grid-template-columns:2fr 50px 70px 120px 90px;">
+          <div><div style="font-size:13px;font-weight:600;">Irish Spring Original Bar Soap 25ct</div><div style="font-size:11px;color:#aaa;">SKU: 23699</div></div>
+          <div style="font-size:13px;">2</div>
+          <div style="font-size:13px;font-weight:700;color:#e31837;">$10.98</div>
+          <div><span style="background:#dbeafe;color:#1d4ed8;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;">Club Pickup</span></div>
+          <div><span class="badge badge-green" style="font-size:11px;">Delivered</span></div>
+        </div>
+        <div class="return-items-row" style="grid-template-columns:2fr 50px 70px 120px 90px;">
+          <div><div style="font-size:13px;font-weight:600;">Tide Original Laundry Detergent 150oz</div><div style="font-size:11px;color:#aaa;">SKU: 45231</div></div>
+          <div style="font-size:13px;">1</div>
+          <div style="font-size:13px;font-weight:700;color:#e31837;">$22.99</div>
+          <div><span style="background:#dbeafe;color:#1d4ed8;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;">Club Pickup</span></div>
+          <div><span class="badge badge-green" style="font-size:11px;">Delivered</span></div>
+        </div>
+        <div class="return-items-row" style="grid-template-columns:2fr 50px 70px 120px 90px;">
+          <div><div style="font-size:13px;font-weight:600;">Bounty Paper Towels 12-pack</div><div style="font-size:11px;color:#aaa;">SKU: 31087</div></div>
+          <div style="font-size:13px;">1</div>
+          <div style="font-size:13px;font-weight:700;color:#e31837;">$18.49</div>
+          <div><span style="background:#dbeafe;color:#1d4ed8;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;">Club Pickup</span></div>
+          <div><span class="badge badge-green" style="font-size:11px;">Delivered</span></div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex; gap:12px; justify-content:flex-end;">
+        <button onclick="closeOrderSummary()" style="padding:10px 24px;border:1.5px solid #ccc;border-radius:6px;background:#fff;font-size:14px;font-weight:700;cursor:pointer;color:#333;">Close</button>
+        <button onclick="startReturn()" style="padding:10px 24px;background:#e31837;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;">Create Return</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- RETURNS FLOW SHELL                                          -->
+<!-- ============================================================ -->
+<div id="returns-shell" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; z-index:900; flex-direction:column;">
+
+  <!-- Returns Header (cloned from main) -->
+  <div id="returns-header-slot"></div>
+
+  <!-- Returns Breadcrumb -->
+  <div style="padding:10px 48px; font-size:13px; color:#666; border-bottom:1px solid #f0f0f0; background:#fff; flex-shrink:0;">
+    <span onclick="exitReturns()" style="color:#2563eb; text-decoration:none; cursor:pointer;">Home</span>
+    <span style="margin:0 6px; color:#aaa;">/</span>
+    <span style="color:#2563eb; cursor:pointer;" onclick="exitReturns()">BJ's Order Management System - Call Center</span>
+    <span style="margin:0 6px; color:#aaa;">/</span>
+    <span style="color:#444;">Create Return</span>
+  </div>
+
+  <!-- Returns Layout -->
+  <div style="display:flex; flex:1; overflow:hidden;">
+
+    <!-- Returns Side Nav -->
+    <div class="return-sidenav">
+      <div class="nav-steps">
+        <!-- Step 1: Order Detail -->
+        <div class="nav-step">
+          <div class="nav-icon-wrap" id="rnwrap-0">
+            <div class="nav-circle active" id="rncircle-0">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="stroke:#fff"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div class="nav-check" id="rncheck-0" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="stroke:#fff"><polyline points="20 6 9 17 4 12"/></svg></div>
+          </div>
+          <div class="nav-step-label active" id="rnlabel-0">Order Details</div>
+        </div>
+        <!-- Step 2: Confirmation -->
+        <div class="nav-step">
+          <div class="nav-connector" id="rnconn-1"></div>
+          <div class="nav-icon-wrap" id="rnwrap-1">
+            <div class="nav-circle" id="rncircle-1">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="stroke:#999"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            </div>
+            <div class="nav-check" id="rncheck-1" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="stroke:#fff"><polyline points="20 6 9 17 4 12"/></svg></div>
+          </div>
+          <div class="nav-step-label inactive" id="rnlabel-1">Confirmation</div>
+        </div>
+        <!-- Step 3: Return Created -->
+        <div class="nav-step">
+          <div class="nav-connector" id="rnconn-2"></div>
+          <div class="nav-icon-wrap" id="rnwrap-2">
+            <div class="nav-circle" id="rncircle-2">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="stroke:#999"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <div class="nav-check" id="rncheck-2" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="stroke:#fff"><polyline points="20 6 9 17 4 12"/></svg></div>
+          </div>
+          <div class="nav-step-label inactive" id="rnlabel-2">Return<br>Created</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Returns Content -->
+    <div class="content" id="returns-content">
+
+      <!-- RETURN PAGE 1: ORDER DETAIL -->
+      <div id="rpage-1" class="page active">
+        <div class="page-title-row">
+          <div class="page-title">Order Details</div>
+          <div class="action-btns">
+            <button class="btn-cancel" onclick="exitReturns()">Cancel Return</button>
+            <button class="btn-next" onclick="goToReturnStep(3)">Confirmation →</button>
+          </div>
+        </div>
+        <p class="page-subtitle" style="font-size:13px;">Review the order details, enter associate information and select items to return.</p>
+
+        <!-- TWO COLUMN LAYOUT -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+
+          <!-- LEFT -->
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <div class="customer-banner" style="margin-bottom:0;flex-shrink:0;">
+              <div class="cust-avatar">T</div>
+              <div class="cust-info">
+                <div class="cust-name">test1 cst <span class="badge-green-sm">Active Member</span></div>
+                <div class="cust-meta">
+                  <span>📞 7745023210</span>
+                  <span>✉️ dk91@yopmail.com</span>
+                  <span>🪪 #21141198256</span>
+                  <span>Member since 2/5/24</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Order Info — stretches to fill remaining height -->
+            <div style="flex:1;border:1px solid #e8e8e8;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;">
+              <div style="background:#f7f7f7;padding:12px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e8e8e8;flex-shrink:0;">
+                <div style="font-size:13px;font-weight:700;color:#333;">Order Information</div>
+                <span id="rorder-status-badge" class="badge badge-green">Created</span>
+              </div>
+              <div style="padding:16px 18px;flex:1;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                  <div class="order-info-item"><label>Order Number</label><span id="rorder-num" style="color:#e31837;">MC20045614</span></div>
+                  <div class="order-info-item"><label>Order Date</label><span id="rorder-date">05/08/2026</span></div>
+                  <div class="order-info-item"><label>Order Total</label><span id="rorder-total">$41.33</span></div>
+                  <div class="order-info-item"><label>Club</label><span>BJ's Pensacola</span></div>
+                  <div class="order-info-item"><label>Fulfillment</label><span>Club Pickup</span></div>
+                  <div class="order-info-item"><label>Payment Method</label><span>Credit Card ····4231</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Channel & Associate Information -->
+          <div class="return-associate-section" style="margin:0;display:flex;flex-direction:column;justify-content:space-between;">
+            <div class="return-associate-title" style="font-size:16px;">Channel & Associate Information</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+
+              <div class="form-field">
+                <label>Channel <span class="req">*</span></label>
+                <select style="width:100%;padding:9px 12px;border:1.5px solid #d0d0d0;border-radius:6px;font-size:13px;outline:none;color:#333;">
+                  <option selected>Club</option>
+                  <option>BOPIC</option>
+                  <option>SDD</option>
+                  <option>Shipping</option>
+                </select>
+              </div>
+
+              <div class="form-field">
+                <label>Club ID <span class="req">*</span></label>
+                <input type="text" value="0221" style="width:100%;padding:9px 12px;border:1.5px solid #d0d0d0;border-radius:6px;font-size:13px;outline:none;color:#333;" />
+              </div>
+
+              <div class="form-field">
+                <label>Club Location <span class="req">*</span></label>
+                <select style="width:100%;padding:9px 12px;border:1.5px solid #d0d0d0;border-radius:6px;font-size:13px;outline:none;color:#333;">
+                  <option>BJ's Pensacola — 7000 N Davis Hwy Unit 5</option>
+                  <option>BJ's Hudson — 1 Highland Commons West</option>
+                  <option>BJ's Auburn — 658 Auburn St</option>
+                </select>
+              </div>
+
+              <div class="form-field">
+                <label>Club Associate Name <span class="req">*</span></label>
+                <input type="text" value="John Smith" style="width:100%;padding:9px 12px;border:1.5px solid #d0d0d0;border-radius:6px;font-size:13px;outline:none;color:#333;" />
+              </div>
+
+              <div class="form-field">
+                <label>Return Date <span class="req">*</span></label>
+                <input type="text" value="06/09/2026" style="width:100%;padding:9px 12px;border:1.5px solid #d0d0d0;border-radius:6px;font-size:13px;outline:none;color:#333;" />
+              </div>
+
+              <div class="form-field" style="display:flex;align-items:center;gap:10px;padding-top:24px;">
+                <input type="checkbox" id="gift-recipient" style="width:16px;height:16px;accent-color:#e31837;cursor:pointer;" />
+                <label for="gift-recipient" style="font-size:13px;font-weight:600;color:#444;cursor:pointer;">Returned by gift recipient</label>
+              </div>
+
+            </div>
+            <div style="margin-top:14px;padding:10px 14px;background:#fff8e1;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#856404;">
+              ⚠️ BOPIC and SDD orders can only be processed with channel set to <strong>Club</strong>.
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ITEM SELECTION — merged into Order Detail -->
+        <div style="margin-top:20px;">
+          <div style="font-size:16px;font-weight:700;color:#111;margin-bottom:6px;">Item Selection</div>
+          <p style="font-size:13px;color:#888;margin-bottom:16px;">Select items to return, set quantities and reason codes. Click Save on each line before continuing.</p>
+          <div style="font-size:13px;color:#555;background:#fff8e1;border:1px solid #fde68a;border-radius:8px;padding:10px 16px;margin-bottom:20px;">
+            ⚠️ Select at least one item. Quantities cannot exceed the original order quantity. Click <strong>Save</strong> on each line to confirm before proceeding.
+          </div>
+
+        <!-- Item 1 -->
+        <div style="border:1.5px solid #e0e0e0;border-radius:8px;overflow:hidden;margin-bottom:10px;" id="item1-card">
+          <div style="background:#f7f7f7;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e8e8e8;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <input type="checkbox" checked style="width:16px;height:16px;accent-color:#e31837;cursor:pointer;" />
+              <div>
+                <div style="font-size:13px;font-weight:700;">Irish Spring Original Bar Soap 25ct</div>
+                <div style="font-size:11px;color:#aaa;">SKU: 23699 · Unit price: $5.49 · Ordered: 2</div>
+              </div>
+            </div>
+            <span style="background:#dcfce7;color:#15803d;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;" id="item1-saved-badge" style="display:none;">✓ Saved</span>
+          </div>
+          <div style="padding:10px 14px;">
+            <div style="display:grid;grid-template-columns:100px 1fr 1fr auto;gap:12px;align-items:center;">
+              <div>
+                <div style="font-size:11px;font-weight:600;color:#444;margin-bottom:4px;">Return Qty <span style="color:#e31837;">*</span></div>
+                <div class="return-qty-ctrl">
+                  <button class="return-qty-btn" onclick="changeReturnQty('item1',-1)">−</button>
+                  <span id="rqty-item1" style="font-size:13px;font-weight:700;min-width:20px;text-align:center;">1</span>
+                  <button class="return-qty-btn" onclick="changeReturnQty('item1',1)">+</button>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:11px;font-weight:600;color:#444;margin-bottom:4px;">Return Reason Code <span style="color:#e31837;">*</span></div>
+                <select class="reason-select" style="width:100%;padding:6px 8px;">
+                  <option value="">Select reason code...</option>
+                  <option value="BJS_ACCSSRY_MISSING">BJS_ACCSSRY_MISSING — Accessory Missing</option>
+                  <option value="BJS_BTTR_PRC_ELSWHR">BJS_BTTR_PRC_ELSWHR — Better Price Elsewhere</option>
+                  <option value="BJS_DELIVRD_TOO_LATE">BJS_DELIVRD_TOO_LATE — Delivered Too Late</option>
+                  <option value="BJS_DSPPNTD_WTH_ITEM">BJS_DSPPNTD_WTH_ITEM — Disappointed with Item</option>
+                  <option value="BJS_DUPLICATE_ORDER">BJS_DUPLICATE_ORDER — Duplicate Order</option>
+                  <option value="BJS_GIFT_RETURN">BJS_GIFT_RETURN — Gift Return</option>
+                  <option value="BJS_I_CHNGD_MY_MIND">BJS_I_CHNGD_MY_MIND — I Changed My Mind</option>
+                  <option value="BJS_I_MADE_A_MISTAKE">BJS_I_MADE_A_MISTAKE — I Made a Mistake</option>
+                  <option value="BJS_ITEM_DAMAGED" selected>BJS_ITEM_DAMAGED — Item Damaged</option>
+                  <option value="BJS_ITEM_DEFECTIVE">BJS_ITEM_DEFECTIVE — Item Defective</option>
+                  <option value="BJS_ITEM_NT_AS_DESC">BJS_ITEM_NT_AS_DESC — Item Not as Described</option>
+                  <option value="BJS_ITEM_NVR_DELIVRD">BJS_ITEM_NVR_DELIVRD — Item Never Delivered</option>
+                  <option value="BJS_ORDER_INCOMPLETE">BJS_ORDER_INCOMPLETE — Order Incomplete</option>
+                  <option value="BJS_RCVD_MOR_THN_ORD">BJS_RCVD_MOR_THN_ORD — Received More Than Ordered</option>
+                  <option value="BJS_RTRN_WTHOUT_RMA">BJS_RTRN_WTHOUT_RMA — Return Without RMA</option>
+                  <option value="BJS_WRNG_ITEM_DLVRD">BJS_WRNG_ITEM_DLVRD — Wrong Item Delivered</option>
+                </select>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;padding-top:16px;">
+                <input type="checkbox" id="destroy1" checked style="width:14px;height:14px;accent-color:#e31837;cursor:pointer;" />
+                <label for="destroy1" style="font-size:11px;font-weight:600;color:#c0152e;cursor:pointer;">Destroy in field</label>
+              </div>
+              <div style="padding-top:16px;">
+                <button onclick="saveReturnLine('item1-saved-badge','item1-card')" style="padding:6px 16px;background:#e31837;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Save Line</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 2 -->
+        <div style="border:1.5px solid #e0e0e0;border-radius:8px;overflow:hidden;margin-bottom:10px;" id="item2-card">
+          <div style="background:#f7f7f7;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e8e8e8;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <input type="checkbox" checked style="width:16px;height:16px;accent-color:#e31837;cursor:pointer;" />
+              <div>
+                <div style="font-size:13px;font-weight:700;">Tide Original Laundry Detergent 150oz</div>
+                <div style="font-size:11px;color:#aaa;">SKU: 45231 · Unit price: $22.99 · Ordered: 1</div>
+              </div>
+            </div>
+            <span style="background:#dcfce7;color:#15803d;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;display:none;" id="item2-saved-badge">✓ Saved</span>
+          </div>
+          <div style="padding:10px 14px;">
+            <div style="display:grid;grid-template-columns:100px 1fr 1fr auto;gap:12px;align-items:center;">
+              <div>
+                <div style="font-size:11px;font-weight:600;color:#444;margin-bottom:4px;">Return Qty <span style="color:#e31837;">*</span></div>
+                <div class="return-qty-ctrl">
+                  <button class="return-qty-btn" onclick="changeReturnQty('item2',-1)">−</button>
+                  <span id="rqty-item2" style="font-size:13px;font-weight:700;min-width:20px;text-align:center;">1</span>
+                  <button class="return-qty-btn" onclick="changeReturnQty('item2',1)">+</button>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:11px;font-weight:600;color:#444;margin-bottom:4px;">Return Reason Code <span style="color:#e31837;">*</span></div>
+                <select class="reason-select" style="width:100%;padding:6px 8px;">
+                  <option value="">Select reason code...</option>
+                  <option value="BJS_ACCSSRY_MISSING">BJS_ACCSSRY_MISSING — Accessory Missing</option>
+                  <option value="BJS_BTTR_PRC_ELSWHR">BJS_BTTR_PRC_ELSWHR — Better Price Elsewhere</option>
+                  <option value="BJS_DELIVRD_TOO_LATE">BJS_DELIVRD_TOO_LATE — Delivered Too Late</option>
+                  <option value="BJS_DSPPNTD_WTH_ITEM">BJS_DSPPNTD_WTH_ITEM — Disappointed with Item</option>
+                  <option value="BJS_DUPLICATE_ORDER">BJS_DUPLICATE_ORDER — Duplicate Order</option>
+                  <option value="BJS_GIFT_RETURN">BJS_GIFT_RETURN — Gift Return</option>
+                  <option value="BJS_I_CHNGD_MY_MIND">BJS_I_CHNGD_MY_MIND — I Changed My Mind</option>
+                  <option value="BJS_I_MADE_A_MISTAKE">BJS_I_MADE_A_MISTAKE — I Made a Mistake</option>
+                  <option value="BJS_ITEM_DAMAGED">BJS_ITEM_DAMAGED — Item Damaged</option>
+                  <option value="BJS_ITEM_DEFECTIVE">BJS_ITEM_DEFECTIVE — Item Defective</option>
+                  <option value="BJS_ITEM_NT_AS_DESC">BJS_ITEM_NT_AS_DESC — Item Not as Described</option>
+                  <option value="BJS_ITEM_NVR_DELIVRD">BJS_ITEM_NVR_DELIVRD — Item Never Delivered</option>
+                  <option value="BJS_ORDER_INCOMPLETE">BJS_ORDER_INCOMPLETE — Order Incomplete</option>
+                  <option value="BJS_RCVD_MOR_THN_ORD">BJS_RCVD_MOR_THN_ORD — Received More Than Ordered</option>
+                  <option value="BJS_RTRN_WTHOUT_RMA" selected>BJS_RTRN_WTHOUT_RMA — Return Without RMA</option>
+                  <option value="BJS_WRNG_ITEM_DLVRD">BJS_WRNG_ITEM_DLVRD — Wrong Item Delivered</option>
+                </select>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;padding-top:16px;">
+                <input type="checkbox" id="destroy2" style="width:14px;height:14px;accent-color:#e31837;cursor:pointer;" />
+                <label for="destroy2" style="font-size:11px;font-weight:600;color:#c0152e;cursor:pointer;">Destroy in field</label>
+              </div>
+              <div style="padding-top:16px;">
+                <button onclick="saveReturnLine('item2-saved-badge','item2-card')" style="padding:6px 16px;background:#e31837;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Save Line</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding:14px 18px;background:#f8f9ff;border:1px solid #dbeafe;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:13px;color:#555;">Total items selected: <strong style="color:#111;">2 items</strong> · Total qty to return: <strong style="color:#111;">2 units</strong></div>
+          <div style="font-size:15px;font-weight:800;color:#111;">Estimated Refund: <span style="color:#e31837;">$28.48</span></div>
+        </div>
+        </div><!-- end item selection section -->
+      </div><!-- end rpage-1 -->
+
+      <!-- RETURN PAGE 3: CONFIRMATION (Payment & Refund) -->
+      <div id="rpage-3" class="page">
+        <div class="page-title-row">
+          <div class="page-title">Payment Confirmation</div>
+          <div class="action-btns">
+            <button class="btn-cancel" onclick="exitReturns()">Cancel Return</button>
+            <button class="btn-back" onclick="goToReturnStep(1)">← Back</button>
+            <button class="btn-next" onclick="goToReturnStep(4)">Confirm →</button>
+          </div>
+        </div>
+        <p class="page-subtitle">Review the return summary and confirm the refund payment method before creating the return order.</p>
+
+        <div style="display:flex;gap:24px;">
+          <!-- Left col -->
+          <div style="flex:1;min-width:0;">
+
+            <!-- Return summary -->
+            <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:12px;">Return Summary</div>
+            <div class="return-items-table" style="margin-bottom:24px;">
+              <div class="return-items-head" style="grid-template-columns:2fr 50px 80px 160px;"><span>Item</span><span>Qty</span><span>Price</span><span>Reason Code</span></div>
+              <div class="return-items-row" style="grid-template-columns:2fr 50px 80px 160px;">
+                <div><div style="font-size:13px;font-weight:600;">Irish Spring Original Bar Soap 25ct</div><div style="font-size:11px;color:#aaa;">SKU: 23699 · Destroy in field: Yes</div></div>
+                <div style="font-size:13px;">1</div>
+                <div style="font-size:13px;font-weight:700;color:#e31837;">$5.49</div>
+                <div style="font-size:11px;color:#555;background:#f0f0f0;padding:3px 8px;border-radius:20px;display:inline-block;">BJS_ITEM_DAMAGED</div>
+              </div>
+              <div class="return-items-row" style="grid-template-columns:2fr 50px 80px 160px;">
+                <div><div style="font-size:13px;font-weight:600;">Tide Original Laundry Detergent 150oz</div><div style="font-size:11px;color:#aaa;">SKU: 45231 · Destroy in field: No</div></div>
+                <div style="font-size:13px;">1</div>
+                <div style="font-size:13px;font-weight:700;color:#e31837;">$22.99</div>
+                <div style="font-size:11px;color:#555;background:#f0f0f0;padding:3px 8px;border-radius:20px;display:inline-block;">BJS_RTRN_WTHOUT_RMA</div>
+              </div>
+            </div>
+
+            <!-- Refund Method -->
+            <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:6px;">Refund Payment Method</div>
+            <div style="font-size:12px;color:#888;margin-bottom:12px;">Amount to refund: <strong style="color:#111;">$28.48</strong> · Total quantity to be returned: <strong style="color:#111;">2 items</strong></div>
+            <div class="refund-methods">
+              <div class="refund-method selected" onclick="selectRefund(this)">
+                <div class="rm-icon">💳</div>
+                <div class="rm-info">
+                  <div class="rm-name">MASTERCARD ending in 2205</div>
+                  <div class="rm-detail">Original payment method · Amount to refund: $28.48</div>
+                </div>
+                <div class="rm-radio"><div class="rm-dot"></div></div>
+              </div>
+              <div class="refund-method" onclick="selectRefund(this)">
+                <div class="rm-icon">⭐</div>
+                <div class="rm-info">
+                  <div class="rm-name">Membership Awards / Credits</div>
+                  <div class="rm-detail">Apply refund as BJ's credit to membership account</div>
+                </div>
+                <div class="rm-radio"><div class="rm-dot"></div></div>
+              </div>
+              <div class="refund-method" onclick="selectRefund(this)">
+                <div class="rm-icon">🎁</div>
+                <div class="rm-info">
+                  <div class="rm-name">Gift Card</div>
+                  <div class="rm-detail">Issue refund as a BJ's gift card</div>
+                </div>
+                <div class="rm-radio"><div class="rm-dot"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right sidebar -->
+          <div class="sidebar" style="width:280px;">
+            <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:14px;">Pricing Summary</div>
+            <div class="refund-summary-row"><span>Subtotal</span><span>$28.48</span></div>
+            <div class="refund-summary-row"><span>SDD Order Shipping</span><span>$0.00</span></div>
+            <div class="refund-summary-row"><span>Surcharge</span><span>$0.00</span></div>
+            <div class="refund-summary-row"><span>Other Charges</span><span>$0.00</span></div>
+            <div class="refund-summary-row"><span>Promotions</span><span>$0.00</span></div>
+            <div class="refund-summary-row"><span>Taxes</span><span>$0.00</span></div>
+            <div class="refund-summary-row"><span>Awards</span><span>$0.00</span></div>
+            <div class="refund-summary-row"><span>Coupon Discount</span><span>$0.00</span></div>
+            <div class="refund-summary-row total-row"><span>Return Total</span><span class="refund-amt">$28.48</span></div>
+            <div style="margin-top:16px;padding:10px 12px;background:#fff8e1;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#856404;">
+              ⚠️ For non-in-club returns, refund will be issued once returned goods are acknowledged.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RETURN PAGE 4: RETURN CREATED -->
+      <div id="rpage-4" class="page">
+        <div style="display:flex; align-items:center; justify-content:center; height:100%; padding:48px;">
+          <div style="background:#fff; border-radius:12px; padding:36px 40px; max-width:480px; width:100%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.12); border:1px solid #e8e8e8;">
+            <div style="width:64px; height:64px; background:#dcfce7; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:28px;">✓</div>
+            <div style="font-size:22px; font-weight:800; color:#111; margin-bottom:10px;">Return Order Created!</div>
+            <div style="font-size:14px; color:#666; margin-bottom:6px;">Return <strong style="color:#e31837;">RT-20045614-01</strong> has been created for order <strong style="color:#e31837;">MC20045614</strong>.</div>
+            <div style="font-size:13px; color:#888; margin-bottom:28px;">Customer will be notified at dk91@yopmail.com · Order moved to <strong>Return Received</strong> status · Refund of <strong>$28.48</strong> to MASTERCARD ····2205</div>
+            <div style="background:#f8f9ff; border:1px solid #e8e8e8; border-radius:8px; padding:16px 20px; margin-bottom:24px; text-align:left;">
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid #f0f0f0;color:#555;"><span style="color:#888;">Return Number</span><span style="font-weight:600;color:#e31837;">RT-20045614-01</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid #f0f0f0;color:#555;"><span style="color:#888;">Original Order</span><span style="font-weight:600;color:#111;">MC20045614</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid #f0f0f0;color:#555;"><span style="color:#888;">Order Status</span><span style="font-weight:700;color:#1d4ed8;">Return Received</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid #f0f0f0;color:#555;"><span style="color:#888;">Items Returned</span><span style="font-weight:600;color:#111;">2 items · 2 units</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid #f0f0f0;color:#555;"><span style="color:#888;">Refund Total</span><span style="font-weight:700;color:#e31837;">$28.48</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid #f0f0f0;color:#555;"><span style="color:#888;">Refund Method</span><span style="font-weight:600;color:#111;">MASTERCARD ····2205</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;color:#555;"><span style="color:#888;">Club</span><span style="font-weight:600;color:#111;">BJ's Pensacola (ID: 0221)</span></div>
+            </div>
+            <button onclick="exitReturns()" style="width:100%;padding:14px;background:#e31837;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;">Back to Home</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /returns-content -->
+  </div><!-- /returns layout -->
+</div><!-- /returns-shell -->
+
+<script>
+// ===== RETURNS FLOW FUNCTIONS =====
+
+function toggleMixedCart() {
+  var std = document.getElementById('osm-standard');
+  var mix = document.getElementById('osm-mixed');
+  var isStd = std.style.display !== 'none';
+  std.style.display = isStd ? 'none' : 'block';
+  mix.style.display = isStd ? 'block' : 'none';
+}
+
+function openOrderSummary(orderNum, orderDate, orderTotal, orderStatus) {
+  document.getElementById('osm-number').textContent = orderNum;
+  document.getElementById('osm-date').textContent = orderDate;
+  document.getElementById('osm-total').textContent = orderTotal;
+  document.getElementById('osm-status').textContent = orderStatus;
+  document.getElementById('order-summary-modal').style.display = 'flex';
+}
+
+function closeOrderSummary() {
+  document.getElementById('order-summary-modal').style.display = 'none';
+}
+
+function startReturn() {
+  closeOrderSummary();
+  // Clone the main header into the returns shell
+  var mainHeader = document.querySelector('.shell > .header');
+  var slot = document.getElementById('returns-header-slot');
+  if (mainHeader && slot && !slot.hasChildNodes()) {
+    var clone = mainHeader.cloneNode(true);
+    // Override hamburger to exit returns
+    var ham = clone.querySelector('.hamburger');
+    if (ham) ham.setAttribute('onclick', 'exitReturns()');
+    slot.appendChild(clone);
+  }
+  // Copy order info into the returns flow
+  var orderNum = document.getElementById('osm-number').textContent;
+  var orderDate = document.getElementById('osm-date').textContent;
+  var orderTotal = document.getElementById('osm-total').textContent;
+  document.getElementById('rorder-num').textContent = orderNum;
+  document.getElementById('rorder-date').textContent = orderDate;
+  document.getElementById('rorder-total').textContent = orderTotal;
+  // Show returns shell
+  var shell = document.getElementById('returns-shell');
+  shell.style.display = 'flex';
+  goToReturnStep(1);
+}
+
+function exitReturns() {
+  document.getElementById('returns-shell').style.display = 'none';
+  // Reset return steps
+  goToReturnStep(1);
+}
+
+var returnQtys = { item1: 1, item2: 1 };
+var returnQtyMax = { item1: 2, item2: 1 };
+
+function changeReturnQty(item, delta) {
+  returnQtys[item] = Math.max(1, Math.min(returnQtyMax[item], returnQtys[item] + delta));
+  document.getElementById('rqty-' + item).textContent = returnQtys[item];
+}
+
+function goToReturnStep(step) {
+  // Hide all return pages
+  for (var i = 1; i <= 4; i++) {
+    var p = document.getElementById('rpage-' + i);
+    if (p) p.className = 'page';
+  }
+  // Show target page
+  var target = document.getElementById('rpage-' + step);
+  if (target) target.className = 'page active';
+
+  // Map page numbers to nav indices: page1->0, page3->1, page4->2
+  var navMap = {1: 0, 3: 1, 4: 2};
+  var navStep = navMap[step] !== undefined ? navMap[step] : 0;
+
+  for (var i = 0; i < 3; i++) {
+    var circle = document.getElementById('rncircle-' + i);
+    var label = document.getElementById('rnlabel-' + i);
+    var check = document.getElementById('rncheck-' + i);
+    var svg = circle ? circle.querySelector('svg') : null;
+
+    if (i < navStep) {
+      circle.className = 'nav-circle done';
+      if (svg) svg.style.stroke = '#aaa';
+      label.className = 'nav-step-label done';
+      if (check) check.style.display = 'flex';
+    } else if (i === navStep) {
+      circle.className = 'nav-circle active';
+      if (svg) svg.style.stroke = '#fff';
+      label.className = 'nav-step-label active';
+      if (check) check.style.display = 'none';
+    } else {
+      circle.className = 'nav-circle';
+      if (svg) svg.style.stroke = '#999';
+      label.className = 'nav-step-label inactive';
+      if (check) check.style.display = 'none';
+    }
+  }
+}
+
+function saveReturnLine(badgeId, cardId) {
+  var badge = document.getElementById(badgeId);
+  var card = document.getElementById(cardId);
+  if (badge) badge.style.display = 'inline-block';
+  if (card) card.style.borderColor = '#22c55e';
+}
+
+function selectRefund(el) {
+  var methods = document.querySelectorAll('.refund-method');
+  for (var i = 0; i < methods.length; i++) { methods[i].classList.remove('selected'); }
+  el.classList.add('selected');
+}
+</script>
+
+<!-- CONFIRMATION MODAL -->
+<div id="confirm-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:12px; padding:36px 40px; max-width:460px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <div style="width:64px; height:64px; background:#dcfce7; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; font-size:28px;">✓</div>
+    <div style="font-size:20px; font-weight:800; color:#111; margin-bottom:8px;">Order Confirmed!</div>
+    <div style="font-size:14px; color:#666; margin-bottom:6px;">Order <strong style="color:#e31837;">MC20045614</strong> has been placed successfully.</div>
+    <div style="font-size:13px; color:#888; margin-bottom:24px;">Customer will receive a confirmation at dk91@yopmail.com · Pickup: 05/08/2026, 1:00–2:00 PM at BJ's Pensacola</div>
+    <button onclick="closeModal()" style="padding:12px 32px; background:#e31837; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; width:100%;">Back to Home</button>
+  </div>
+</div>
+</body>
+</html>
