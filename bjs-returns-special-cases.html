@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>BJ's Returns – Special Cases</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background:#f5f5f5; font-size:14px; color:#1a1a1a; }
+.header { background:#111; display:flex; align-items:center; justify-content:space-between; padding:0 20px; height:56px; }
+.header-left { display:flex; align-items:center; gap:16px; }
+.bjs-logo img { height:36px; width:auto; display:block; }
+.app-name { color:#fff; font-size:16px; font-weight:500; }
+.header-right { display:flex; align-items:center; gap:6px; }
+.user-name { color:#fff; font-weight:600; font-size:14px; }
+.user-role { color:#aaa; font-size:12px; display:block; text-align:right; }
+.breadcrumb { padding:10px 48px; font-size:13px; color:#666; border-bottom:1px solid #f0f0f0; background:#fff; }
+.breadcrumb a { color:#2563eb; text-decoration:none; }
+.case-nav { background:#fff; border-bottom:2px solid #e0e0e0; padding:0 48px; display:flex; }
+.case-tab { padding:14px 28px; font-size:14px; font-weight:600; color:#888; cursor:pointer; border-bottom:3px solid transparent; margin-bottom:-2px; }
+.case-tab:hover { color:#e31837; }
+.case-tab.active { color:#e31837; border-bottom-color:#e31837; }
+.case-content { display:none; }
+.case-content.active { display:block; }
+
+/* MODAL OVERLAY */
+.modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:100; }
+.modal-box { background:#fff; border-radius:12px; overflow:hidden; max-width:960px; width:96%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.2); }
+.modal-header { background:#111; padding:16px 24px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:10; }
+.modal-body { padding:24px; }
+
+/* CUSTOMER BANNER */
+.customer-banner { background:#f8f9ff; border:1.5px solid #dbeafe; border-radius:8px; padding:12px 18px; display:flex; align-items:center; gap:14px; margin-bottom:20px; }
+.cust-avatar { width:38px; height:38px; border-radius:50%; background:#e31837; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; flex-shrink:0; }
+.cust-name-row { font-weight:700; font-size:14px; display:flex; align-items:center; gap:8px; }
+.cust-meta { font-size:12px; color:#666; margin-top:3px; display:flex; gap:16px; flex-wrap:wrap; }
+.badge-green-sm { background:#dcfce7; color:#15803d; font-size:11px; font-weight:600; padding:2px 10px; border-radius:20px; }
+
+/* ORDER INFO GRID */
+.order-info-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:20px; }
+.order-info-item label { font-size:11px; color:#999; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:4px; }
+.order-info-item span { font-size:14px; font-weight:600; color:#111; }
+
+/* ITEMS TABLE */
+.items-table { border:1px solid #e8e8e8; border-radius:8px; overflow:hidden; margin-bottom:24px; }
+.items-head { background:#f7f7f7; padding:10px 16px; font-size:12px; font-weight:700; color:#666; border-bottom:1px solid #e8e8e8; display:grid; grid-template-columns:2fr 50px 75px 130px 90px 140px; gap:8px; align-items:center; }
+.items-row { padding:12px 16px; border-bottom:1px solid #f2f2f2; display:grid; grid-template-columns:2fr 50px 75px 130px 90px 140px; gap:8px; align-items:center; }
+.items-row:last-child { border-bottom:none; }
+.fulfillment-tag { font-size:11px; font-weight:600; padding:3px 8px; border-radius:20px; display:inline-block; white-space:nowrap; }
+.ft-pickup { background:#dbeafe; color:#1d4ed8; }
+.ft-ship { background:#fef9c3; color:#854d0e; }
+.ft-sdd { background:#f3e8ff; color:#7c3aed; }
+.badge-green { background:#dcfce7; color:#15803d; font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; display:inline-block; }
+.btn-create { padding:6px 14px; background:#e31837; color:#fff; border:none; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; }
+.btn-create:hover { background:#c0152e; }
+.btn-done { padding:6px 14px; background:#fff; color:#22c55e; border:1.5px solid #22c55e; border-radius:6px; font-size:12px; font-weight:700; cursor:default; white-space:nowrap; }
+
+/* ALERT */
+.alert-banner { border-radius:10px; padding:14px 20px; display:flex; align-items:flex-start; gap:12px; margin-bottom:20px; }
+.alert-warning { background:#fff8e1; border:1.5px solid #fde68a; }
+.alert-danger { background:#fff1f2; border:1.5px solid #fecdd3; }
+.alert-title { font-size:13px; font-weight:700; color:#111; margin-bottom:3px; }
+.alert-desc { font-size:12px; color:#555; line-height:1.6; }
+
+/* REFUND INDICATOR */
+.refund-indicator { border:1px solid #e8e8e8; border-radius:8px; overflow:hidden; margin-top:8px; }
+.refund-head { background:#f7f7f7; padding:8px 14px; font-size:11px; font-weight:700; color:#666; display:grid; grid-template-columns:2fr 1fr 1fr 1fr; border-bottom:1px solid #e8e8e8; }
+.refund-row { padding:8px 14px; border-bottom:1px solid #f2f2f2; display:grid; grid-template-columns:2fr 1fr 1fr 1fr; align-items:center; font-size:12px; }
+.refund-row:last-child { border-bottom:none; }
+.ref-yes { color:#15803d; font-weight:700; text-align:center; }
+.ref-no { color:#dc2626; font-weight:700; text-align:center; }
+
+/* ITEM CARD for cases 2 & 3 */
+.item-card { border:1.5px solid #e0e0e0; border-radius:10px; overflow:hidden; margin-bottom:16px; background:#fff; }
+.item-card-head { background:#f7f7f7; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #e8e8e8; }
+.item-card-body { padding:16px; }
+.return-qty-ctrl { display:flex; align-items:center; gap:6px; }
+.return-qty-btn { width:24px; height:24px; border:1.5px solid #ddd; border-radius:4px; background:#fff; font-size:15px; display:flex; align-items:center; justify-content:center; color:#555; cursor:pointer; }
+.reason-select { font-size:12px; border:1.5px solid #e31837; border-radius:6px; padding:7px 10px; color:#333; outline:none; width:100%; background:#fff5f5; }
+
+/* CASE BADGE */
+.case-badge { display:inline-flex; align-items:center; gap:8px; background:#fff3f3; border:1.5px solid #fca5a5; border-radius:8px; padding:6px 14px; margin-bottom:16px; font-size:12px; font-weight:700; color:#c0152e; }
+
+/* TWO COL */
+.two-col { display:flex; gap:24px; }
+.two-col-main { flex:1; min-width:0; }
+.sidebar { width:260px; background:#fafafa; border:1px solid #e8e8e8; border-radius:10px; padding:20px 16px; flex-shrink:0; height:fit-content; }
+.sb-row { display:flex; justify-content:space-between; font-size:12px; margin-bottom:7px; color:#555; }
+.sb-row.total { font-weight:800; color:#111; border-top:1px solid #ddd; padding-top:9px; margin-top:5px; font-size:14px; }
+.sb-row.total .amt { color:#e31837; }
+
+/* BUTTONS */
+.btn-cancel { font-size:14px; color:#e31837; font-weight:700; background:none; border:1.5px solid #e31837; border-radius:6px; cursor:pointer; padding:10px 24px; height:42px; }
+.btn-next { padding:10px 24px; border:none; border-radius:6px; background:#e31837; font-size:14px; font-weight:700; cursor:pointer; color:#fff; height:42px; }
+.btn-back { padding:10px 24px; border:1.5px solid #ccc; border-radius:6px; background:#fff; font-size:14px; font-weight:700; cursor:pointer; color:#333; height:42px; }
+.action-btns { display:flex; align-items:center; gap:10px; }
+.page-title-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+.page-title { font-size:24px; font-weight:800; color:#111; }
+.page-subtitle { font-size:13px; color:#888; margin-bottom:24px; }
+.content-pad { padding:32px 48px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <span style="color:#fff;font-size:20px;cursor:pointer;">☰</span>
+    <div class="bjs-logo"><img src="data:image/png;base64,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" alt="BJ's" /></div>
+    <span class="app-name">BJ's Order Management System - Call Center</span>
+  </div>
+  <div class="header-right">
+    <div><span class="user-name">Saranath Rangamannar</span><span class="user-role">CSC Manager</span></div>
+    <span style="color:#aaa;font-size:12px;margin-left:4px;">▾</span>
+    <span style="color:#aaa;font-size:20px;margin-left:10px;cursor:pointer;">⎋</span>
+  </div>
+</div>
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb">
+  <a href="#">Home</a>
+  <span style="margin:0 6px;color:#aaa;">/</span>
+  <a href="#">BJ's Order Management System - Call Center</a>
+  <span style="margin:0 6px;color:#aaa;">/</span>
+  <span style="color:#444;">Special Cases</span>
+</div>
+
+<!-- TABS -->
+<div class="case-nav">
+  <div class="case-tab active" onclick="showCase(0)">Case 1 — Mixed Cart</div>
+  <div class="case-tab" onclick="showCase(1)">Case 2 — SDD Delivery Failed</div>
+  <div class="case-tab" onclick="showCase(2)">Case 3 — SDD-RD Heavy Orders</div>
+</div>
+
+<!-- ====================================================== -->
+<!-- CASE 1: MIXED CART — Order Summary Modal              -->
+<!-- ====================================================== -->
+<div class="case-content active" id="case-0">
+  <div style="padding:40px 48px; background:#f5f5f5; min-height:calc(100vh - 148px); display:flex; align-items:flex-start; justify-content:center;">
+
+    <!-- Simulated background blur -->
+    <div style="position:relative; width:100%; max-width:960px;">
+      <div style="font-size:12px;color:#888;margin-bottom:12px;text-align:center;">Order Summary — as seen after clicking "Select Order" from search results</div>
+
+      <div class="modal-box">
+        <div class="modal-header">
+          <div style="color:#fff;font-size:16px;font-weight:700;">Order Summary</div>
+          <span style="color:#aaa;font-size:22px;cursor:pointer;">×</span>
+        </div>
+        <div class="modal-body">
+
+          <!-- Customer -->
+          <div class="customer-banner">
+            <div class="cust-avatar">T</div>
+            <div style="flex:1;">
+              <div class="cust-name-row">test1 cst <span class="badge-green-sm">Active Member</span></div>
+              <div class="cust-meta"><span>📞 7745023210</span><span>✉️ dk91@yopmail.com</span><span>🪪 #21141198256</span><span>Member since 2/5/24</span></div>
+            </div>
+          </div>
+
+          <!-- Order info -->
+          <div class="order-info-grid">
+            <div class="order-info-item"><label>Order Number</label><span style="color:#e31837;">MC20045614</span></div>
+            <div class="order-info-item"><label>Order Date</label><span>05/08/2026</span></div>
+            <div class="order-info-item"><label>Status</label><span>Delivered</span></div>
+            <div class="order-info-item"><label>Total</label><span>$52.46</span></div>
+            <div class="order-info-item"><label>Club</label><span>BJ's Pensacola</span></div>
+            <div class="order-info-item"><label>Payment</label><span>MASTERCARD ····2205</span></div>
+          </div>
+
+          <!-- Mixed cart alert -->
+          <div class="alert-banner alert-warning">
+            <span style="font-size:18px;flex-shrink:0;">⚠️</span>
+            <div>
+              <div class="alert-title">Mixed Cart — Multiple Returns Required</div>
+              <div class="alert-desc">This order has items with different fulfillment types. A separate return must be created for each item group. Use the "Create Return" button on each row to start.</div>
+            </div>
+          </div>
+
+          <!-- Items table with Create Return per row -->
+          <div style="font-size:13px;font-weight:700;color:#444;margin-bottom:10px;">Items Ordered</div>
+          <div class="items-table">
+            <div class="items-head">
+              <span>Item</span><span>Qty</span><span>Price</span><span>Fulfillment</span><span>Status</span><span style="text-align:right;">Action</span>
+            </div>
+
+            <!-- Row 1: Club Pickup — already done -->
+            <div class="items-row" style="background:#f9fef9;">
+              <div>
+                <div style="font-size:13px;font-weight:600;">Irish Spring Original Bar Soap 25ct</div>
+                <div style="font-size:11px;color:#aaa;">SKU: 23699</div>
+              </div>
+              <div style="font-size:13px;">2</div>
+              <div style="font-size:13px;font-weight:700;color:#e31837;">$10.98</div>
+              <div><span class="fulfillment-tag ft-pickup">Club Pickup</span></div>
+              <div><span class="badge-green">Delivered</span></div>
+              <div style="text-align:right;"><button class="btn-done">✓ Return Created</button></div>
+            </div>
+
+            <!-- Row 2: Ship to Home — pending -->
+            <div class="items-row">
+              <div>
+                <div style="font-size:13px;font-weight:600;">Tide Original Laundry Detergent 150oz</div>
+                <div style="font-size:11px;color:#aaa;">SKU: 45231</div>
+              </div>
+              <div style="font-size:13px;">1</div>
+              <div style="font-size:13px;font-weight:700;color:#e31837;">$22.99</div>
+              <div><span class="fulfillment-tag ft-ship">Ship to Home</span></div>
+              <div><span class="badge-green">Delivered</span></div>
+              <div style="text-align:right;"><button class="btn-create">Create Return</button></div>
+            </div>
+
+            <!-- Row 3: SDD — pending -->
+            <div class="items-row">
+              <div>
+                <div style="font-size:13px;font-weight:600;">Bounty Paper Towels 12-pack</div>
+                <div style="font-size:11px;color:#aaa;">SKU: 31087</div>
+                <div style="font-size:10px;color:#856404;background:#fff8e1;border-radius:3px;padding:2px 6px;display:inline-block;margin-top:3px;">⚠️ Channel must be Club</div>
+              </div>
+              <div style="font-size:13px;">1</div>
+              <div style="font-size:13px;font-weight:700;color:#e31837;">$18.49</div>
+              <div><span class="fulfillment-tag ft-sdd">SDD</span></div>
+              <div><span class="badge-green">Delivered</span></div>
+              <div style="text-align:right;"><button class="btn-create">Create Return</button></div>
+            </div>
+
+          </div>
+
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================== -->
+<!-- CASE 2: SDD DELIVERY FAILED                           -->
+<!-- ====================================================== -->
+<div class="case-content" id="case-1">
+  <div class="content-pad">
+    <div class="page-title-row">
+      <div>
+        <div class="case-badge">🚨 Special Case 2</div>
+        <div class="page-title">SDD Delivery Failed — Item Selection</div>
+      </div>
+      <div class="action-btns">
+        <button class="btn-cancel">Cancel Return</button>
+        <button class="btn-back">← Back</button>
+        <button class="btn-next">Confirmation →</button>
+      </div>
+    </div>
+    <p class="page-subtitle">For SDD orders with a failed delivery, Roadie delivery failure reason codes apply instead of standard BJ's codes.</p>
+
+    <div class="alert-banner alert-danger">
+      <span style="font-size:18px;flex-shrink:0;">🚨</span>
+      <div>
+        <div class="alert-title">SDD Delivery Failed — Roadie Reason Codes Apply</div>
+        <div class="alert-desc">This SDD order has a delivery failure on record. Select the appropriate Roadie code — the system shows refund eligibility automatically.</div>
+      </div>
+    </div>
+
+    <div class="customer-banner">
+      <div class="cust-avatar">T</div>
+      <div style="flex:1;">
+        <div class="cust-name-row">test1 cst <span class="badge-green-sm">Active Member</span></div>
+        <div class="cust-meta"><span>📞 7745023210</span><span>✉️ dk91@yopmail.com</span><span>🪪 #21141198256</span></div>
+      </div>
+    </div>
+
+    <div class="item-card">
+      <div class="item-card-head">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <input type="checkbox" checked style="width:16px;height:16px;accent-color:#e31837;"/>
+          <div>
+            <div style="font-size:13px;font-weight:700;">Irish Spring Original Bar Soap 25ct</div>
+            <div style="font-size:11px;color:#aaa;">SKU: 23699 · SDD Order · Delivery Failed</div>
+          </div>
+        </div>
+        <span style="background:#fee2e2;color:#dc2626;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;">Delivery Failed</span>
+      </div>
+      <div class="item-card-body">
+        <div style="display:grid;grid-template-columns:120px 1fr;gap:16px;margin-bottom:14px;">
+          <div>
+            <div style="font-size:12px;font-weight:600;color:#444;margin-bottom:6px;">Return Qty <span style="color:#e31837;">*</span></div>
+            <div class="return-qty-ctrl">
+              <button class="return-qty-btn">−</button>
+              <span style="font-size:14px;font-weight:700;min-width:24px;text-align:center;">1</span>
+              <button class="return-qty-btn">+</button>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:#444;margin-bottom:6px;">Roadie Delivery Failure Reason Code <span style="color:#e31837;">*</span></div>
+            <select class="reason-select" onchange="updateRoadie(this.value)">
+              <option value="">Select Roadie reason code...</option>
+              <option value="rd" selected>recipient_refused_damaged — Customer rejected due to damage</option>
+              <option value="rr">recipient_refused — Customer refused delivery</option>
+              <option value="na">dest_address_not_found — Address incorrect</option>
+              <option value="te">delivery_time_expired — Time limit exceeded</option>
+              <option value="ru">recipient_unavailable — Recipient unavailable</option>
+            </select>
+          </div>
+        </div>
+        <div style="font-size:12px;font-weight:600;color:#444;margin-bottom:6px;">Refund eligibility for selected code:</div>
+        <div class="refund-indicator">
+          <div class="refund-head"><span>Concept</span><span>Del. Fee</span><span>Tips</span><span>Order Value</span></div>
+          <div class="refund-row"><span style="font-size:12px;color:#555;">Refund to member</span><span id="r2-md" class="ref-yes">✓ Yes</span><span id="r2-mt" class="ref-yes">✓ Yes</span><span id="r2-mv" class="ref-yes">✓ Yes</span></div>
+          <div class="refund-row"><span style="font-size:12px;color:#555;">Charge to vendor</span><span id="r2-vd" class="ref-no">✗ No</span><span id="r2-vt" class="ref-no">✗ No</span><span id="r2-vv" class="ref-no">✗ No</span></div>
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-top:8px;">ℹ️ Refund eligibility updates automatically based on the Roadie code selected.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================== -->
+<!-- CASE 3: SDD-RD HEAVY ORDERS                          -->
+<!-- ====================================================== -->
+<div class="case-content" id="case-2">
+  <div class="content-pad">
+    <div class="page-title-row">
+      <div>
+        <div class="case-badge">⚠️ Special Case 3</div>
+        <div class="page-title">SDD-RD Heavy Orders — Item Selection</div>
+      </div>
+      <div class="action-btns">
+        <button class="btn-cancel">Cancel Return</button>
+        <button class="btn-back">← Back</button>
+        <button class="btn-next">Confirmation →</button>
+      </div>
+    </div>
+    <p class="page-subtitle">For SDD-RD heavy orders, refund eligibility for delivery fee and tips depends on the reason code selected.</p>
+
+    <div class="alert-banner alert-warning">
+      <span style="font-size:18px;flex-shrink:0;">⚠️</span>
+      <div>
+        <div class="alert-title">SDD-RD Heavy Order — Refund Eligibility Depends on Reason Code</div>
+        <div class="alert-desc">Select the return reason code — the system automatically indicates whether the delivery fee and tips are refunded to the member.</div>
+      </div>
+    </div>
+
+    <div class="customer-banner">
+      <div class="cust-avatar">T</div>
+      <div style="flex:1;">
+        <div class="cust-name-row">test1 cst <span class="badge-green-sm">Active Member</span></div>
+        <div class="cust-meta"><span>📞 7745023210</span><span>✉️ dk91@yopmail.com</span><span>🪪 #21141198256</span></div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="two-col-main">
+        <div class="item-card">
+          <div class="item-card-head">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <input type="checkbox" checked style="width:16px;height:16px;accent-color:#e31837;"/>
+              <div>
+                <div style="font-size:13px;font-weight:700;">Large Appliance — Heavy Item</div>
+                <div style="font-size:11px;color:#aaa;">SKU: 78901 · SDD-RD Order · $189.99</div>
+              </div>
+            </div>
+            <span class="fulfillment-tag ft-sdd">SDD-RD Heavy</span>
+          </div>
+          <div class="item-card-body">
+            <div style="display:grid;grid-template-columns:120px 1fr;gap:16px;margin-bottom:14px;">
+              <div>
+                <div style="font-size:12px;font-weight:600;color:#444;margin-bottom:6px;">Return Qty <span style="color:#e31837;">*</span></div>
+                <div class="return-qty-ctrl">
+                  <button class="return-qty-btn">−</button>
+                  <span style="font-size:14px;font-weight:700;min-width:24px;text-align:center;">1</span>
+                  <button class="return-qty-btn">+</button>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:12px;font-weight:600;color:#444;margin-bottom:6px;">Return Reason Code <span style="color:#e31837;">*</span></div>
+                <select class="reason-select" onchange="updateHeavy(this.value)">
+                  <option value="">Select reason code...</option>
+                  <option value="d" selected>BJS_ITEM_DAMAGED — Item Damaged</option>
+                  <option value="de">BJS_ITEM_DEFECTIVE — Item Defective</option>
+                  <option value="l">BJS_DELIVRD_TOO_LATE — Delivered Too Late</option>
+                  <option value="m">BJS_I_CHNGD_MY_MIND — I Changed My Mind</option>
+                  <option value="n">BJS_ITEM_NVR_DELIVRD — Item Never Delivered</option>
+                </select>
+              </div>
+            </div>
+            <div style="font-size:12px;font-weight:600;color:#444;margin-bottom:6px;">Refund eligibility — updates automatically:</div>
+            <div class="refund-indicator">
+              <div class="refund-head"><span>Concept</span><span>Del. Fee</span><span>Tips</span><span>Order Value</span></div>
+              <div class="refund-row"><span style="font-size:12px;color:#555;">Refund to member</span><span id="r3-md" class="ref-yes">✓ Yes</span><span id="r3-mt" class="ref-yes">✓ Yes</span><span id="r3-mv" class="ref-yes">✓ Yes</span></div>
+              <div class="refund-row"><span style="font-size:12px;color:#555;">Charge to vendor</span><span id="r3-vd" class="ref-no">✗ No</span><span id="r3-vt" class="ref-no">✗ No</span><span id="r3-vv" class="ref-no">✗ No</span></div>
+            </div>
+            <div style="font-size:11px;color:#aaa;margin-top:8px;">ℹ️ Refund eligibility updates automatically based on the reason code selected.</div>
+          </div>
+        </div>
+      </div>
+      <div class="sidebar">
+        <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:14px;">Refund Preview</div>
+        <div class="sb-row"><span>Order Value</span><span>$189.99</span></div>
+        <div class="sb-row" id="r3-sb-del"><span>Delivery Fee</span><span style="color:#15803d;">✓ Refunded</span></div>
+        <div class="sb-row" id="r3-sb-tip"><span>Tips</span><span style="color:#15803d;">✓ Refunded</span></div>
+        <div class="sb-row total"><span>Estimated Total</span><span class="amt">$204.49</span></div>
+        <div style="margin-top:14px;padding:10px 12px;background:#fff8e1;border:1px solid #fde68a;border-radius:6px;font-size:11px;color:#856404;">
+          ⚠️ Final amounts calculated based on reason code and order details.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showCase(i) {
+  document.querySelectorAll('.case-tab').forEach(function(t,j){ t.classList.toggle('active', i===j); });
+  document.querySelectorAll('.case-content').forEach(function(c,j){ c.classList.toggle('active', i===j); });
+}
+
+var roadieMatrix = {
+  rd: [true,true,true,false,false,false],
+  rr: [false,false,true,false,false,false],
+  na: [false,false,true,false,false,false],
+  te: [true,true,true,true,true,false],
+  ru: [false,false,true,false,false,false]
+};
+
+var heavyMatrix = {
+  d:  [true,true,true,true,true,true],
+  de: [true,true,true,false,false,false],
+  l:  [true,true,false,true,true,false],
+  m:  [false,false,false,false,false,false],
+  n:  [true,true,true,true,true,true]
+};
+
+function setCell(id, val) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.className = val ? 'ref-yes' : 'ref-no';
+  el.textContent = val ? '✓ Yes' : '✗ No';
+}
+
+function updateRoadie(code) {
+  var m = roadieMatrix[code]; if (!m) return;
+  setCell('r2-md',m[0]); setCell('r2-mt',m[1]); setCell('r2-mv',m[2]);
+  setCell('r2-vd',m[3]); setCell('r2-vt',m[4]); setCell('r2-vv',m[5]);
+}
+
+function updateHeavy(code) {
+  var m = heavyMatrix[code]; if (!m) return;
+  setCell('r3-md',m[0]); setCell('r3-mt',m[1]); setCell('r3-mv',m[2]);
+  setCell('r3-vd',m[3]); setCell('r3-vt',m[4]); setCell('r3-vv',m[5]);
+  var del = document.getElementById('r3-sb-del').querySelector('span:last-child');
+  var tip = document.getElementById('r3-sb-tip').querySelector('span:last-child');
+  del.innerHTML = m[0] ? '<span style="color:#15803d;">✓ Refunded</span>' : '<span style="color:#dc2626;">✗ Not refunded</span>';
+  tip.innerHTML = m[1] ? '<span style="color:#15803d;">✓ Refunded</span>' : '<span style="color:#dc2626;">✗ Not refunded</span>';
+}
+</script>
+
+</body>
+</html>
